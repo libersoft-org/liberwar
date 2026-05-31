@@ -38,6 +38,11 @@ export class Building extends GameObject {
 		return this.buildProgress >= 1;
 	}
 
+	// Refund when sold: half the purchase price, scaled by current health.
+	get sellValue(): number {
+		return Math.floor((this.def.cost * 0.5 * this.hp) / this.maxHp);
+	}
+
 	// Returns true once a turret with a weapon fires (used for sound).
 	update(dt: number, world: World): void {
 		if (!this.complete) {

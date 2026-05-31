@@ -276,7 +276,7 @@ export class Renderer {
 		const world = g.camera.screenToWorld(m);
 		const tx = Math.floor(world.x / TILE);
 		const ty = Math.floor(world.y / TILE);
-		const ok = g.canPlayerPlace(tx, ty, def.w, def.h);
+		const ok = g.canPlayerPlace(tx, ty, def.w, def.h, g.pendingPlacement);
 		const sx = tx * TILE - g.camera.x;
 		const sy = ty * TILE - g.camera.y;
 		ctx.fillStyle = ok ? 'rgba(90,255,120,0.25)' : 'rgba(255,80,70,0.3)';

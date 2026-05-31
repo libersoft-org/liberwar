@@ -28,11 +28,15 @@
 	"hud": {
 		"structures": "STRUCTURES",
 		"units": "UNITS",
-		"place": "PLACE"
+		"place": "PLACE",
+		"sell": "SELL"
 	},
 	"reason": {
 		"requires": "Requires {name}",
-		"credits": "Not enough credits"
+		"credits": "Not enough credits",
+		"onlyOne": "Only one allowed",
+		"busy": "Another structure is already being produced",
+		"ready": "Another structure is ready to be placed"
 	},
 	"unit": {
 		"harvester": "Harvester",

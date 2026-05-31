@@ -2,8 +2,10 @@ import { spiralSearch } from '../math/geometry.ts';
 import { tileCenter } from '../map/GameMap.ts';
 import { TILE } from '../core/types.ts';
 import { dist } from '../math/vec.ts';
+import { FOG_VISIBLE } from '../map/FogOfWar.ts';
+import type { FogOfWar } from '../map/FogOfWar.ts';
 import type { GameMap } from '../map/GameMap.ts';
-import type { Vec2 } from '../core/types.ts';
+import type { BuildingTypeId, Vec2 } from '../core/types.ts';
 import type { Building } from '../entities/Building.ts';
 
 /**
@@ -13,10 +15,12 @@ import type { Building } from '../entities/Building.ts';
 export class PlacementSystem {
 	private map: GameMap;
 	private buildings: () => Building[];
+	private fog: FogOfWar;
 
-	constructor(map: GameMap, buildings: () => Building[]) {
+	constructor(map: GameMap, buildings: () => Building[], fog: FogOfWar) {
 		this.map = map;
 		this.buildings = buildings;
+		this.fog = fog;
 	}
 
 	// True if a w×h footprint at (tx,ty) is on buildable, unoccupied ground.
@@ -32,12 +36,19 @@ export class PlacementSystem {
 	}
 
 	// Player placement additionally requires proximity to an existing structure.
-	canPlayerPlace(tx: number, ty: number, w: number, h: number): boolean {
+	// Exception: a construction yard with no remaining player buildings may be
+	// placed on any currently visible tile (within active sight, not just
+	// previously explored fog).
+	canPlayerPlace(tx: number, ty: number, w: number, h: number, type?: BuildingTypeId): boolean {
 		if (!this.canPlaceBuilding(tx, ty, w, h)) return false;
+		const playerBuildings = this.buildings().filter((b: Building): boolean => b.faction === 'player' && !b.dead);
+		if (type === 'yard' && playerBuildings.length === 0) {
+			for (let y = ty; y < ty + h; y++) for (let x = tx; x < tx + w; x++) if (this.fog.state(x, y) !== FOG_VISIBLE) return false;
+			return true;
+		}
 		const cx = tx + w / 2;
 		const cy = ty + h / 2;
-		for (const b of this.buildings()) {
-			if (b.faction !== 'player' || b.dead) continue;
+		for (const b of playerBuildings) {
 			const bx = b.tile.x + b.def.w / 2;
 			const by = b.tile.y + b.def.h / 2;
 			if (dist({ x: cx, y: cy }, { x: bx, y: by }) <= Math.max(b.def.w, b.def.h) / 2 + 6) return true;

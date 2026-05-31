@@ -81,8 +81,8 @@ export const UNITS: Record<UnitTypeId, UnitDef> = {
 export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 	yard: {
 		id: 'yard',
-		cost: 0,
-		buildTime: 0,
+		cost: 2000,
+		buildTime: 8,
 		hp: 1500,
 		w: 3,
 		h: 3,
@@ -98,6 +98,7 @@ export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 		h: 2,
 		sight: 4,
 		power: 100,
+		requires: ['yard'],
 	},
 	refinery: {
 		id: 'refinery',
@@ -118,6 +119,7 @@ export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 		h: 2,
 		sight: 4,
 		power: -20,
+		requires: ['yard'],
 	},
 	factory: {
 		id: 'factory',
@@ -128,7 +130,7 @@ export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 		h: 3,
 		sight: 4,
 		power: -50,
-		requires: 'power',
+		requires: ['yard', 'power'],
 	},
 	turret: {
 		id: 'turret',
@@ -140,11 +142,11 @@ export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 		sight: 6,
 		power: -30,
 		weapon: { damage: 35, range: 6, cooldown: 0.8, projectile: 'bullet' },
-		requires: 'power',
+		requires: ['yard', 'power'],
 	},
 };
 // Order shown in the build sidebar.
-export const BUILD_ORDER: BuildingTypeId[] = ['power', 'refinery', 'barracks', 'factory', 'turret'];
+export const BUILD_ORDER: BuildingTypeId[] = ['yard', 'power', 'refinery', 'barracks', 'factory', 'turret'];
 export const TRAIN_ORDER: UnitTypeId[] = ['rifleman', 'rocketeer', 'harvester', 'lighttank', 'heavytank'];
 export const FACTION_COLORS: Record<Faction, FactionPalette> = {
 	player: { primary: '#3da5ff', dark: '#1c4f80', light: '#9fd2ff' },

@@ -75,7 +75,7 @@ export class EnemyAI {
 		if (this.planIndex < BUILD_PLAN.length) {
 			const next = BUILD_PLAN[this.planIndex]!;
 			const def = BUILDINGS[next];
-			const reqMet = !def.requires || this.has(def.requires);
+			const reqMet = !def.requires || def.requires.every((r: BuildingTypeId): boolean => this.has(r));
 			if (reqMet && credits >= def.cost) {
 				if (this.placeEnemyBuilding(next, yard)) {
 					this.planIndex++;

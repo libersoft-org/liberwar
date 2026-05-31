@@ -10,6 +10,7 @@ import { EnemyAI } from '../AI.ts';
 import type { Difficulty } from '../AI.ts';
 import { Renderer } from '../render/Renderer.ts';
 import { HUD } from '../render/HUD.ts';
+import { Toast } from '../render/Toast.ts';
 import { InputController } from '../Input.ts';
 import { MAP_H, MAP_W, TILE } from './types.ts';
 import type { BuildingTypeId, Faction, FactionPalette, UnitTypeId, Vec2 } from './types.ts';
@@ -37,9 +38,9 @@ export class Game implements World {
 	audio: AudioEngine;
 	renderer: Renderer;
 	hud: HUD;
+	toast: Toast;
 	input: InputController;
 	ai: EnemyAI;
-
 	units: Unit[] = [];
 	buildings: Building[] = [];
 	projectiles: Projectile[] = [];
@@ -81,7 +82,7 @@ export class Game implements World {
 			(): Building[] => this.buildings
 		);
 		this.economy = new EconomySystem(this.query);
-		this.placement = new PlacementSystem(this.map, (): Building[] => this.buildings);
+		this.placement = new PlacementSystem(this.map, (): Building[] => this.buildings, this.fog);
 		this.combat = new CombatResolver(
 			(): Unit[] => this.units,
 			(): Building[] => this.buildings
@@ -91,6 +92,7 @@ export class Game implements World {
 
 		this.renderer = new Renderer(this);
 		this.hud = new HUD(this);
+		this.toast = new Toast();
 		this.input = new InputController(this);
 		this.ai = new EnemyAI(this, difficulty);
 
@@ -194,8 +196,8 @@ export class Game implements World {
 	}
 
 	// Player placement also requires proximity to an existing structure.
-	canPlayerPlace(tx: number, ty: number, w: number, h: number): boolean {
-		return this.placement.canPlayerPlace(tx, ty, w, h);
+	canPlayerPlace(tx: number, ty: number, w: number, h: number, type?: BuildingTypeId): boolean {
+		return this.placement.canPlayerPlace(tx, ty, w, h, type);
 	}
 
 	findSpawnNear(b: Building): Vec2 {
@@ -270,6 +272,16 @@ export class Game implements World {
 		this.selection.clearSelection();
 	}
 
+	// Sell the currently selected player building for a health-scaled refund.
+	sellSelectedBuilding(): void {
+		const b = this.selection.selectedBuilding;
+		if (!b || b.faction !== 'player' || b.dead || !b.complete) return;
+		this.economy.addCredits('player', b.sellValue);
+		b.dead = true;
+		this.audio.play('build');
+		this.selection.clearSelection();
+	}
+
 	unitAt(p: Vec2): Unit | null {
 		return this.selection.unitAt(p);
 	}
@@ -296,6 +308,7 @@ export class Game implements World {
 			last = now;
 			dt = Math.min(dt, 0.05);
 			this.update(dt);
+			this.toast.update(dt);
 			this.render();
 			requestAnimationFrame(frame);
 		};
@@ -385,9 +398,9 @@ export class Game implements World {
 	}
 
 	private checkVictory(): void {
-		const playerYard = this.query.hasBuilding('player', 'yard');
+		const playerAny = this.query.buildingsOf('player').length > 0 || this.query.unitsOf('player').length > 0;
 		const enemyAny = this.query.buildingsOf('enemy').length > 0 || this.query.unitsOf('enemy').length > 0;
-		if (!playerYard) this.end('lose');
+		if (!playerAny) this.end('lose');
 		else if (!enemyAny) this.end('win');
 	}
 
@@ -413,6 +426,12 @@ export class Game implements World {
 	private render(): void {
 		this.renderer.render();
 		this.hud.render();
+		this.toast.render(this.ctx, this.viewW);
+	}
+
+	// Shows a transient notification in the top-right corner.
+	notify(text: string): void {
+		this.toast.push(text);
 	}
 
 	// expose for HUD

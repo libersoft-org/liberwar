@@ -28,11 +28,15 @@
 	"hud": {
 		"structures": "STAVBY",
 		"units": "JEDNOTKY",
-		"place": "UMÍSTI"
+		"place": "UMÍSTI",
+		"sell": "PRODAT"
 	},
 	"reason": {
 		"requires": "Vyžaduje {name}",
-		"credits": "Málo kreditů"
+		"credits": "Nedostatek kreditů",
+		"onlyOne": "Povolen pouze jeden",
+		"busy": "Již probíhá jiná stavba",
+		"ready": "Jiná stavba je připravena k umístění"
 	},
 	"unit": {
 		"harvester": "Harvester",

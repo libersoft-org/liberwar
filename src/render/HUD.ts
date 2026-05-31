@@ -21,6 +21,7 @@ export class HUD {
 	private minimap = { x: 6, y: 56, size: 200 };
 	private statsH = 50;
 	private visibleUnitsKey = '';
+	private sellBtn: { x: number; y: number; w: number; h: number } | null = null;
 
 	constructor(game: Game) {
 		this.game = game;
@@ -92,6 +93,7 @@ export class HUD {
 		this.drawStats(ctx, sx, w);
 		this.drawMinimap(ctx);
 		this.drawButtons(ctx);
+		this.drawSellButton(ctx, sx, w, h);
 	}
 
 	private drawStats(ctx: CanvasRenderingContext2D, sx: number, w: number): void {
@@ -183,6 +185,37 @@ export class HUD {
 		if (firstUnitIdx >= 0) ctx.fillText(t('hud.units'), this.buttons[firstUnitIdx]!.x, this.buttons[firstUnitIdx]!.y - 8);
 
 		for (const btn of this.buttons) this.drawButton(ctx, btn);
+	}
+
+	// Contextual sell button, shown only while a player building is selected.
+	private drawSellButton(ctx: CanvasRenderingContext2D, sx: number, w: number, h: number): void {
+		const b = this.game.selectedBuilding;
+		if (!b || b.faction !== 'player' || !b.complete) {
+			this.sellBtn = null;
+			return;
+		}
+		const pad = 6;
+		const bh = 34;
+		const rect = { x: sx + pad, y: h - bh - pad, w: w - pad * 2, h: bh };
+		this.sellBtn = rect;
+		const r = 7;
+		ctx.fillStyle = '#3a1b1b';
+		ctx.beginPath();
+		ctx.roundRect(rect.x, rect.y, rect.w, rect.h, r);
+		ctx.fill();
+		ctx.strokeStyle = '#ff7a5a';
+		ctx.lineWidth = 1.5;
+		ctx.beginPath();
+		ctx.roundRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1, r);
+		ctx.stroke();
+		ctx.fillStyle = '#ffd0c0';
+		ctx.font = 'bold 13px Consolas, monospace';
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'middle';
+		ctx.fillText(t('hud.sell'), rect.x + 12, rect.y + rect.h / 2);
+		ctx.fillStyle = '#ffd23d';
+		ctx.textAlign = 'right';
+		ctx.fillText('+$' + b.sellValue, rect.x + rect.w - 12, rect.y + rect.h / 2);
 	}
 
 	private drawButton(ctx: CanvasRenderingContext2D, btn: Btn): void {
@@ -390,6 +423,13 @@ export class HUD {
 			const wy = (y - mm.y) / scale;
 			if (button === 2 && g.selectedUnits.length > 0) g.commandAt({ x: wx, y: wy });
 			else g.camera.centerOn({ x: wx, y: wy });
+			return;
+		}
+
+		// sell button
+		const sb = this.sellBtn;
+		if (sb && x >= sb.x && x <= sb.x + sb.w && y >= sb.y && y <= sb.y + sb.h) {
+			if (button === 0) g.sellSelectedBuilding();
 			return;
 		}
 

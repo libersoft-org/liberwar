@@ -59,5 +59,5 @@ export interface BuildingDef {
 	power: number; // positive = produces, negative = consumes
 	// combat capability; absent => passive structure
 	weapon?: WeaponSpec;
-	requires?: BuildingTypeId;
+	requires?: BuildingTypeId[];
 }

@@ -4,11 +4,15 @@
 
 ## New Features
 
+- Check whether all components are sufficiently atomized
+- When I build a structure where a unit stands, the unit should move to the nearest empty tile - currently it gets stuck
+- When win / loss - add option to return to the main menu
+- Pause - add restart button
 - Main menu (even after game ended) - Single player, Multiplayer (disabled), Settings (audio, language etc.)
 - Make forced aspect ratio to 16:9 on all screen resolutions
 - Add flags to languages
-- Sell building
-- Building and unit repair
+- Sell structure
+- Structure (and unit?) repair
 - Roadkill infantry units by heavy units
 - Map editor (no more autogeneration)
 - Single Player - Campaign + Load level

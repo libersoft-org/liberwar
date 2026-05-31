@@ -28,7 +28,8 @@ export interface ProductionHost {
 	spawnUnit(type: UnitTypeId, faction: Faction, pos: Vec2): Unit;
 	placeBuilding(type: BuildingTypeId, faction: Faction, tile: Vec2, instant: boolean): Building;
 	findSpawnNear(b: Building): Vec2;
-	canPlayerPlace(tx: number, ty: number, w: number, h: number): boolean;
+	canPlayerPlace(tx: number, ty: number, w: number, h: number, type?: BuildingTypeId): boolean;
+	notify(text: string): void;
 }
 
 /**
@@ -49,11 +50,10 @@ export class ProductionSystem {
 	// validation
 	canBuildStructure(type: BuildingTypeId): { ok: boolean; reason?: string } {
 		const def = BUILDINGS[type];
-		if (def.requires && !this.host.hasBuilding('player', def.requires))
-			return {
-				ok: false,
-				reason: t('reason.requires', { name: t(`building.${def.requires}`) }),
-			};
+		// Only a single construction yard may exist at a time.
+		if (type === 'yard' && this.host.hasBuilding('player', 'yard')) return { ok: false, reason: t('reason.onlyOne') };
+		if (def.requires)
+			for (const req of def.requires) if (!this.host.hasBuilding('player', req)) return { ok: false, reason: t('reason.requires', { name: t(`building.${req}`) }) };
 		if (!this.host.economy.canAfford('player', def.cost)) return { ok: false, reason: t('reason.credits') };
 		return { ok: true };
 	}
@@ -82,10 +82,13 @@ export class ProductionSystem {
 			return;
 		}
 		if (this.structureSlot) {
+			this.host.notify(t(this.structureSlot.ready ? 'reason.ready' : 'reason.busy'));
 			this.host.audio.play('deny');
 			return;
 		}
-		if (!this.canBuildStructure(type).ok) {
+		const check = this.canBuildStructure(type);
+		if (!check.ok) {
+			if (check.reason) this.host.notify(check.reason);
 			this.host.audio.play('deny');
 			return;
 		}
@@ -110,7 +113,7 @@ export class ProductionSystem {
 	confirmPlacement(tile: Vec2): void {
 		if (!this.pendingPlacement || !this.structureSlot?.ready) return;
 		const def = BUILDINGS[this.pendingPlacement];
-		if (this.host.canPlayerPlace(tile.x, tile.y, def.w, def.h)) {
+		if (this.host.canPlayerPlace(tile.x, tile.y, def.w, def.h, this.pendingPlacement)) {
 			this.host.placeBuilding(this.pendingPlacement, 'player', tile, false);
 			this.host.audio.play('build');
 			this.pendingPlacement = null;
@@ -122,7 +125,9 @@ export class ProductionSystem {
 
 	// units
 	startUnit(type: UnitTypeId): void {
-		if (!this.canTrainUnit(type).ok) {
+		const check = this.canTrainUnit(type);
+		if (!check.ok) {
+			if (check.reason) this.host.notify(check.reason);
 			this.host.audio.play('deny');
 			return;
 		}
