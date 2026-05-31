@@ -18,3 +18,4 @@
 - Map editor (no more autogeneration)
 - Single Player - Campaign + Load level
 - Multiplayer
+- Add mobile responsive layout (sidebar on hamburger menu click)
