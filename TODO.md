@@ -7,7 +7,7 @@
 - Check whether all components are sufficiently atomized
 - When I build a structure where a unit stands, the unit should move to the nearest empty tile - currently it gets stuck
 - When win / loss - add option to return to the main menu
-- Pause - add restart button
+- When paused, the "Restart mission" button generates a new level
 - Main menu (even after game ended) - Single player, Multiplayer (disabled), Settings (audio, language etc.)
 - Make forced aspect ratio to 16:9 on all screen resolutions
 - Add flags to languages
