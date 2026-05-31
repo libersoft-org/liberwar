@@ -71,9 +71,7 @@ function lookup(key: string): string | undefined {
 export function t(key: string, params?: Record<string, string | number>): string {
 	let value = lookup(key) ?? key;
 	if (params) {
-		for (const name in params) {
-			value = value.replace(`{${name}}`, String(params[name]));
-		}
+		for (const name in params) value = value.replace(`{${name}}`, String(params[name]));
 	}
 	return value;
 }

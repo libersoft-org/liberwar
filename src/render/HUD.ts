@@ -182,9 +182,7 @@ export class HUD {
 		if (this.buttons.length > 0) ctx.fillText(t('hud.structures'), this.buttons[0]!.x, this.buttons[0]!.y - 8);
 		if (firstUnitIdx >= 0) ctx.fillText(t('hud.units'), this.buttons[firstUnitIdx]!.x, this.buttons[firstUnitIdx]!.y - 8);
 
-		for (const btn of this.buttons) {
-			this.drawButton(ctx, btn);
-		}
+		for (const btn of this.buttons) this.drawButton(ctx, btn);
 	}
 
 	private drawButton(ctx: CanvasRenderingContext2D, btn: Btn): void {
