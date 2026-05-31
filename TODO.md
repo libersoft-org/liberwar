@@ -4,6 +4,7 @@
 
 ## New Features
 
+- When structure is sold, use another animation than explosion
 - Check whether all components are sufficiently atomized
 - When I build a structure where a unit stands, the unit should move to the nearest empty tile - currently it gets stuck
 - When win / loss - add option to return to the main menu
