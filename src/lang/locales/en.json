@@ -1,0 +1,50 @@
+{
+	"menu": {
+		"intro": "Real-time strategic game",
+		"language": "Language",
+		"start": "START GAME",
+		"difficulty": {
+			"easy": "Easy",
+			"medium": "Medium",
+			"hard": "Hard"
+		}
+	},
+	"meta": {
+		"buildDate": "Build date",
+		"commit": "Commit"
+	},
+	"end": {
+		"win": "VICTORY",
+		"lose": "DEFEAT",
+		"restart": "Play again"
+	},
+	"pause": {
+		"title": "PAUSED",
+		"resume": "Resume",
+		"endMission": "End mission"
+	},
+	"hud": {
+		"structures": "STRUCTURES",
+		"units": "UNITS",
+		"place": "PLACE"
+	},
+	"reason": {
+		"requires": "Requires {name}",
+		"credits": "Not enough credits"
+	},
+	"unit": {
+		"harvester": "Harvester",
+		"rifleman": "Rifleman",
+		"rocketeer": "Rocketeer",
+		"lighttank": "Light Tank",
+		"heavytank": "Heavy Tank"
+	},
+	"building": {
+		"yard": "Construction Yard",
+		"power": "Power Plant",
+		"refinery": "Refinery",
+		"barracks": "Barracks",
+		"factory": "War Factory",
+		"turret": "Gun Turret"
+	}
+}
