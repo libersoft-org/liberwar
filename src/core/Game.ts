@@ -386,7 +386,7 @@ export class Game implements World {
 
 	private checkVictory(): void {
 		const playerYard = this.query.hasBuilding('player', 'yard');
-		const enemyAny = this.query.buildingsOf('enemy').length > 0;
+		const enemyAny = this.query.buildingsOf('enemy').length > 0 || this.query.unitsOf('enemy').length > 0;
 		if (!playerYard) this.end('lose');
 		else if (!enemyAny) this.end('win');
 	}
