@@ -3,6 +3,8 @@
 		"intro": "Real-time strategic game",
 		"language": "Language",
 		"start": "START GAME",
+		"website": "Official website",
+		"github": "GitHub",
 		"difficulty": {
 			"easy": "Easy",
 			"medium": "Medium",

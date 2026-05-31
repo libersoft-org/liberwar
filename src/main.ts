@@ -1,6 +1,6 @@
 import { Game } from './core/Game.ts';
 import type { Difficulty } from './AI.ts';
-import { APP_AUTHOR, APP_NAME, APP_VERSION, APP_WEBSITE, APP_YEAR } from './meta.ts';
+import { APP_AUTHOR, APP_GITHUB, APP_NAME, APP_OFFICIAL_WEBSITE, APP_ORGANIZATION_WEBSITE, APP_VERSION, APP_YEAR } from './meta.ts';
 import { getLocale, initLang, LOCALE_LABELS, setLocale, SUPPORTED_LOCALES, t, type Locale } from './lang/lang.ts';
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const menu = document.getElementById('menu') as HTMLDivElement;
@@ -8,6 +8,8 @@ const appTitle = document.getElementById('appTitle') as HTMLHeadingElement;
 const appVersion = document.getElementById('appVersion') as HTMLDivElement;
 const buildInfo = document.getElementById('buildInfo') as HTMLDivElement;
 const credits = document.getElementById('credits') as HTMLDivElement;
+const websiteLink = document.getElementById('websiteLink') as HTMLAnchorElement;
+const githubLink = document.getElementById('githubLink') as HTMLAnchorElement;
 const startBtn = document.getElementById('startBtn') as HTMLDivElement;
 const difficultyBox = document.getElementById('difficulty') as HTMLDivElement;
 const langSwitch = document.getElementById('langSwitch') as HTMLDivElement;
@@ -36,7 +38,9 @@ function applyDomTranslations(): void {
 	appTitle.textContent = APP_NAME;
 	appVersion.textContent = 'v' + APP_VERSION;
 	buildInfo.innerHTML = `${t('meta.buildDate')}: ${__BUILD_DATE__}<br />${t('meta.commit')}: ${__COMMIT_ID__}`;
-	credits.innerHTML = `<a href="${APP_WEBSITE}" target="_blank" rel="noopener noreferrer">${APP_AUTHOR}</a>, ${APP_YEAR}`;
+	credits.innerHTML = `<a href="${APP_ORGANIZATION_WEBSITE}" target="_blank" rel="noopener noreferrer">${APP_AUTHOR}</a>, ${APP_YEAR}`;
+	websiteLink.href = APP_OFFICIAL_WEBSITE;
+	githubLink.href = APP_GITHUB;
 	document.querySelectorAll<HTMLElement>('[data-lang]').forEach(el => {
 		const key = el.getAttribute('data-lang');
 		if (key) el.textContent = t(key);

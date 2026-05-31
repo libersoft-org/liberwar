@@ -3,6 +3,8 @@
 		"intro": "Real-time strategická hra",
 		"language": "Jazyk",
 		"start": "SPUSTIT HRU",
+		"website": "Oficiální web",
+		"github": "GitHub",
 		"difficulty": {
 			"easy": "Lehká",
 			"medium": "Střední",

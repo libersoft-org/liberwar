@@ -200,6 +200,21 @@
 			#credits a:hover {
 				text-decoration: underline;
 			}
+
+			#links {
+				display: flex;
+				gap: 20px;
+				justify-content: center;
+				margin-top: 10px;
+			}
+			#links a {
+				color: var(--accent);
+				text-decoration: none;
+				font-weight: bold;
+			}
+			#links a:hover {
+				text-decoration: underline;
+			}
 		</style>
 	</head>
 	<body>
@@ -212,6 +227,10 @@
 					<div class="version" id="appVersion"></div>
 					<div class="buildinfo" id="buildInfo"></div>
 					<div id="credits"></div>
+					<div id="links">
+						<a id="websiteLink" target="_blank" rel="noopener noreferrer" data-lang="menu.website"></a>
+						<a id="githubLink" target="_blank" rel="noopener noreferrer" data-lang="menu.github"></a>
+					</div>
 				</div>
 				<p data-lang="menu.intro"></p>
 				<div class="difficulty" id="difficulty">
