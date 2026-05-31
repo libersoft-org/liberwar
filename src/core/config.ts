@@ -40,7 +40,6 @@ export const UNITS: Record<UnitTypeId, UnitDef> = {
 			splash: 1.1,
 		},
 		from: 'barracks',
-		requires: 'factory',
 	},
 	lighttank: {
 		id: 'lighttank',
