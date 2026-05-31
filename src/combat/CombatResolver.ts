@@ -18,7 +18,7 @@ export class CombatResolver {
 
 	// Nearest enemy (unit or building) of `faction` within range, or null.
 	findNearestEnemy(faction: Faction, pos: Vec2, rangeTiles: number): Entity | null {
-		return nearest<Entity>(pos, e => !e.dead && e.faction !== faction, rangeTiles * TILE, [this.units(), this.buildings()]);
+		return nearest<Entity>(pos, (e: Entity): boolean => !e.dead && e.faction !== faction, rangeTiles * TILE, [this.units(), this.buildings()]);
 	}
 
 	// Applies splash damage to all enemies of `faction` within `radius` px.

@@ -1,5 +1,4 @@
 import type { BuildingDef, BuildingTypeId, Faction, FactionPalette, UnitDef, UnitTypeId } from './types.ts';
-
 // Unit definitions
 export const UNITS: Record<UnitTypeId, UnitDef> = {
 	harvester: {
@@ -79,7 +78,6 @@ export const UNITS: Record<UnitTypeId, UnitDef> = {
 		requires: 'power',
 	},
 };
-
 // Building definitions
 export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 	yard: {
@@ -146,17 +144,13 @@ export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 		requires: 'power',
 	},
 };
-
 // Order shown in the build sidebar.
 export const BUILD_ORDER: BuildingTypeId[] = ['power', 'refinery', 'barracks', 'factory', 'turret'];
-
 export const TRAIN_ORDER: UnitTypeId[] = ['rifleman', 'rocketeer', 'harvester', 'lighttank', 'heavytank'];
-
 export const FACTION_COLORS: Record<Faction, FactionPalette> = {
 	player: { primary: '#3da5ff', dark: '#1c4f80', light: '#9fd2ff' },
 	enemy: { primary: '#ff5a4d', dark: '#7a261f', light: '#ffb0a8' },
 };
-
 export const STARTING_CREDITS = 5000;
 export const HARVEST_PER_TILE = 500; // credits worth in a full harvest tile
 export const HARVESTER_CAPACITY = 700;

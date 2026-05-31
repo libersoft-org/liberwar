@@ -3,9 +3,9 @@ import { FOG_HIDDEN } from '../map/FogOfWar.ts';
 import { TILE } from '../core/types.ts';
 import type { BuildingTypeId, UnitTypeId } from '../core/types.ts';
 import type { Game } from '../core/Game.ts';
+import type { UnitSlot } from '../systems/ProductionSystem.ts';
 import { t } from '../lang/lang.ts';
 import { drawBar } from './sprites.ts';
-
 interface Btn {
 	kind: 'structure' | 'unit';
 	id: string;
@@ -42,7 +42,7 @@ export class HUD {
 		let y = this.minimap.y + this.minimap.size + 24; // leave room for "STRUCTURES" label
 		const place = (kind: 'structure' | 'unit', ids: string[], startY: number): number => {
 			let yy = startY;
-			ids.forEach((id, i) => {
+			ids.forEach((id: string, i: number): void => {
 				const col = i % cols;
 				if (col === 0 && i > 0) yy += bh + gap;
 				this.buttons.push({
@@ -65,7 +65,7 @@ export class HUD {
 
 	// Units whose producing building the player currently owns.
 	private visibleUnitIds(): UnitTypeId[] {
-		return TRAIN_ORDER.filter(id => this.game.hasBuilding('player', UNITS[id].from));
+		return TRAIN_ORDER.filter((id: UnitTypeId): boolean => this.game.hasBuilding('player', UNITS[id].from));
 	}
 
 	// rendering
@@ -136,9 +136,9 @@ export class HUD {
 			for (let tx = 0; tx < tiles.w; tx += step) {
 				const s = g.fog.state(tx, ty);
 				if (s === FOG_HIDDEN) continue;
-				const kind = g.map.terrain[ty][tx];
+				const kind = g.map.terrain[ty]![tx]!;
 				let col: string;
-				if (g.map.harvest[ty][tx] > 5) col = '#caa028';
+				if (g.map.harvest[ty]![tx]! > 5) col = '#caa028';
 				else col = kind === 'water' ? '#1e406a' : kind === 'rock' ? '#56565c' : kind === 'dirt' ? '#68543a' : '#3a5c2e';
 				ctx.fillStyle = col;
 				ctx.fillRect(mm.x + tx * TILE * scale, mm.y + ty * TILE * scale, cell + 0.5, cell + 0.5);
@@ -178,9 +178,9 @@ export class HUD {
 		ctx.font = 'bold 12px Consolas, monospace';
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'alphabetic';
-		const firstUnitIdx = this.buttons.findIndex(b => b.kind === 'unit');
-		if (this.buttons.length > 0) ctx.fillText(t('hud.structures'), this.buttons[0].x, this.buttons[0].y - 8);
-		if (firstUnitIdx >= 0) ctx.fillText(t('hud.units'), this.buttons[firstUnitIdx].x, this.buttons[firstUnitIdx].y - 8);
+		const firstUnitIdx = this.buttons.findIndex((b: Btn): boolean => b.kind === 'unit');
+		if (this.buttons.length > 0) ctx.fillText(t('hud.structures'), this.buttons[0]!.x, this.buttons[0]!.y - 8);
+		if (firstUnitIdx >= 0) ctx.fillText(t('hud.units'), this.buttons[firstUnitIdx]!.x, this.buttons[firstUnitIdx]!.y - 8);
 
 		for (const btn of this.buttons) {
 			this.drawButton(ctx, btn);
@@ -213,7 +213,7 @@ export class HUD {
 			cost = def.cost;
 			available = g.canTrainUnit(id).ok;
 			const q = g.unitQueues[def.from] ?? [];
-			queueCount = q.filter(s => s.type === id).length;
+			queueCount = q.filter((s: UnitSlot): boolean => s.type === id).length;
 			const head = q[0];
 			if (head && head.type === id) progress = 1 - head.timeLeft / head.total;
 		}
@@ -390,11 +390,8 @@ export class HUD {
 			const scale = mm.size / (g.mapTiles.w * TILE);
 			const wx = (x - mm.x) / scale;
 			const wy = (y - mm.y) / scale;
-			if (button === 2 && g.selectedUnits.length > 0) {
-				g.commandAt({ x: wx, y: wy });
-			} else {
-				g.camera.centerOn({ x: wx, y: wy });
-			}
+			if (button === 2 && g.selectedUnits.length > 0) g.commandAt({ x: wx, y: wy });
+			else g.camera.centerOn({ x: wx, y: wy });
 			return;
 		}
 
@@ -407,11 +404,8 @@ export class HUD {
 						g.startStructure(btn.id as BuildingTypeId);
 					}
 				} else {
-					if (button === 2) {
-						this.cancelUnit(btn.id as UnitTypeId);
-					} else {
-						g.startUnit(btn.id as UnitTypeId);
-					}
+					if (button === 2) this.cancelUnit(btn.id as UnitTypeId);
+					else g.startUnit(btn.id as UnitTypeId);
 				}
 				return;
 			}
@@ -424,7 +418,7 @@ export class HUD {
 		const q = g.unitQueues[def.from];
 		if (!q) return;
 		for (let i = q.length - 1; i >= 0; i--) {
-			if (q[i].type === id) {
+			if (q[i]!.type === id) {
 				q.splice(i, 1);
 				g.addCredits('player', def.cost);
 				return;

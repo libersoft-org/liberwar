@@ -22,7 +22,7 @@ export class Music {
 			// bass pulse every beat
 			const bass = ctx.createOscillator();
 			bass.type = 'triangle';
-			const root = scale[(beat % 2) * 3];
+			const root = scale[(beat % 2) * 3]!;
 			bass.frequency.value = root / 2;
 			const bg = ctx.createGain();
 			bg.gain.setValueAtTime(0.0001, t);
@@ -35,7 +35,7 @@ export class Music {
 			if (beat % 2 === 0) {
 				const lead = ctx.createOscillator();
 				lead.type = 'sawtooth';
-				lead.frequency.value = scale[Math.floor(Math.random() * scale.length)];
+				lead.frequency.value = scale[Math.floor(Math.random() * scale.length)]!;
 				const lf = ctx.createBiquadFilter();
 				lf.type = 'lowpass';
 				lf.frequency.value = 800;

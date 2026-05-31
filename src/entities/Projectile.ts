@@ -37,9 +37,7 @@ export class Projectile {
 	update(dt: number, world: World): void {
 		// home toward live entity targets (rockets track, bullets keep last pos)
 		const t = this.target as Entity;
-		if (t && 'hp' in t && !t.dead && this.kind === 'rocket') {
-			this.targetPos = { x: t.pos.x, y: t.pos.y };
-		}
+		if (t && 'hp' in t && !t.dead && this.kind === 'rocket') this.targetPos = { x: t.pos.x, y: t.pos.y };
 		const dx = this.targetPos.x - this.pos.x;
 		const dy = this.targetPos.y - this.pos.y;
 		const remaining = Math.hypot(dx, dy);
@@ -71,11 +69,8 @@ export class Projectile {
 			const t = this.target as Entity;
 			if (t && 'hp' in t && !t.dead) {
 				const d = dist(t.pos, this.pos);
-				if (d <= t.radius + 8) {
-					(t as Entity & { takeDamage(n: number): void }).takeDamage(this.damage);
-				} else {
-					world.damageArea(this.pos, 10, this.damage, this.faction);
-				}
+				if (d <= t.radius + 8) (t as Entity & { takeDamage(n: number): void }).takeDamage(this.damage);
+				else world.damageArea(this.pos, 10, this.damage, this.faction);
 			}
 			world.spawnExplosion(this.pos, 8, false);
 		}
@@ -120,7 +115,7 @@ export class Effect {
 				life: this.duration * (0.5 + rng() * 0.5),
 				maxLife: this.duration,
 				size: (kind === 'muzzle' ? 2 : big ? 5 : 3) * (0.6 + rng()),
-				color: palette[Math.floor(rng() * palette.length)],
+				color: palette[Math.floor(rng() * palette.length)]!,
 			});
 		}
 		void radius;

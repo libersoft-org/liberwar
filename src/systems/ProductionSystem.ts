@@ -148,8 +148,8 @@ export class ProductionSystem {
 
 		for (const key of Object.keys(this.unitQueues)) {
 			const q = this.unitQueues[key];
-			if (q.length === 0) continue;
-			const slot = q[0];
+			if (!q || q.length === 0) continue;
+			const slot = q[0]!;
 			slot.timeLeft -= dt * speed;
 			if (slot.timeLeft <= 0) {
 				q.shift();
@@ -160,17 +160,14 @@ export class ProductionSystem {
 
 	private completeUnit(type: UnitTypeId): void {
 		const def = UNITS[type];
-		const from = this.host.buildings.find(b => b.faction === 'player' && b.typeId === def.from && b.complete && !b.dead);
+		const from = this.host.buildings.find((b: Building): boolean => b.faction === 'player' && b.typeId === def.from && b.complete && !b.dead);
 		if (!from) {
 			this.host.economy.addCredits('player', def.cost); // refund if building lost
 			return;
 		}
 		const u = this.host.spawnUnit(type, 'player', this.host.findSpawnNear(from));
 		this.host.audio.play('complete');
-		if (u.isHarvester) {
-			u.orderHarvest(this.host);
-		} else if (from.rally) {
-			u.orderMove(from.rally, this.host);
-		}
+		if (u.isHarvester) u.orderHarvest(this.host);
+		else if (from.rally) u.orderMove(from.rally, this.host);
 	}
 }

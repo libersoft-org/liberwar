@@ -21,14 +21,14 @@ class MinHeap {
 		let i = a.length - 1;
 		while (i > 0) {
 			const p = (i - 1) >> 1;
-			if (a[p].f <= a[i].f) break;
-			[a[p], a[i]] = [a[i], a[p]];
+			if (a[p]!.f <= a[i]!.f) break;
+			[a[p], a[i]] = [a[i]!, a[p]!];
 			i = p;
 		}
 	}
 	pop(): Node {
 		const a = this.items;
-		const top = a[0];
+		const top = a[0]!;
 		const last = a.pop()!;
 		if (a.length > 0) {
 			a[0] = last;
@@ -38,10 +38,10 @@ class MinHeap {
 				const l = 2 * i + 1;
 				const r = 2 * i + 2;
 				let s = i;
-				if (l < n && a[l].f < a[s].f) s = l;
-				if (r < n && a[r].f < a[s].f) s = r;
+				if (l < n && a[l]!.f < a[s]!.f) s = l;
+				if (r < n && a[r]!.f < a[s]!.f) s = r;
 				if (s === i) break;
-				[a[s], a[i]] = [a[i], a[s]];
+				[a[s], a[i]] = [a[i]!, a[s]!];
 				i = s;
 			}
 		}
@@ -49,7 +49,7 @@ class MinHeap {
 	}
 }
 
-const DIRS = [
+const DIRS: ReadonlyArray<readonly [number, number]> = [
 	[1, 0],
 	[-1, 0],
 	[0, 1],
@@ -64,7 +64,7 @@ const DIRS = [
  * A* on the tile grid. Returns a list of tile coordinates from start to goal
  * (excluding start). If goal is blocked, routes to the nearest reachable tile.
  */
-export function findPath(map: GameMap, start: Vec2, goal: Vec2, maxIterations = 6000): Vec2[] {
+export function findPath(map: GameMap, start: Vec2, goal: Vec2, maxIterations: number = 6000): Vec2[] {
 	const sx = start.x;
 	const sy = start.y;
 	let gx = goal.x;

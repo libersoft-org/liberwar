@@ -124,11 +124,11 @@ export class SelectionSystem {
 		// harvester + harvest tile?
 		const tile = worldToTile(world);
 		const harvest = this.host.map.harvestAt(tile.x, tile.y);
-		const harvesters = this.selectedUnits.filter(u => u.isHarvester);
+		const harvesters = this.selectedUnits.filter((u: Unit): boolean => u.isHarvester);
 		if (harvest > 5 && harvesters.length > 0) {
 			for (const h of harvesters) h.orderHarvest(this.host, tile);
 			this.host.audio.play('move');
-			const others = this.selectedUnits.filter(u => !u.isHarvester);
+			const others = this.selectedUnits.filter((u: Unit): boolean => !u.isHarvester);
 			this.issueMove(others, world);
 			return;
 		}
@@ -142,7 +142,7 @@ export class SelectionSystem {
 		// simple grid formation around the target point
 		const cols = Math.ceil(Math.sqrt(units.length));
 		const spacing = TILE;
-		units.forEach((u, i) => {
+		units.forEach((u: Unit, i: number): void => {
 			const cx = i % cols;
 			const cy = Math.floor(i / cols);
 			const offX = (cx - (cols - 1) / 2) * spacing;
@@ -153,10 +153,8 @@ export class SelectionSystem {
 
 	// Drops dead entities from the selection.
 	cleanup(): void {
-		this.selectedUnits = this.selectedUnits.filter(u => !u.dead);
+		this.selectedUnits = this.selectedUnits.filter((u: Unit): boolean => !u.dead);
 		if (this.selectedBuilding?.dead) this.selectedBuilding = null;
-		if (this.selectedHarvestTile && this.host.map.harvestAt(this.selectedHarvestTile.x, this.selectedHarvestTile.y) <= 5) {
-			this.selectedHarvestTile = null;
-		}
+		if (this.selectedHarvestTile && this.host.map.harvestAt(this.selectedHarvestTile.x, this.selectedHarvestTile.y) <= 5) this.selectedHarvestTile = null;
 	}
 }

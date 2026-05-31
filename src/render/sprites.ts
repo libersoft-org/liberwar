@@ -91,13 +91,9 @@ export function drawUnit(ctx: Ctx, u: Unit): void {
 	ctx.ellipse(x, y + u.radius * 0.5, u.radius * 1.05, u.radius * 0.5, 0, 0, Math.PI * 2);
 	ctx.fill();
 
-	if (u.isHarvester) {
-		drawHarvester(ctx, u, c);
-	} else if (u.typeId === 'rifleman' || u.typeId === 'rocketeer') {
-		drawInfantry(ctx, u, c);
-	} else {
-		drawTank(ctx, u, c);
-	}
+	if (u.isHarvester) drawHarvester(ctx, u, c);
+	else if (u.typeId === 'rifleman' || u.typeId === 'rocketeer') drawInfantry(ctx, u, c);
+	else drawTank(ctx, u, c);
 }
 
 function drawTank(ctx: Ctx, u: Unit, c: FactionPalette): void {

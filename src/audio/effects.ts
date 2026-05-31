@@ -151,7 +151,7 @@ export class SoundEffects {
 	}
 
 	private arp(freqs: number[], step: number): void {
-		freqs.forEach((f, i) => {
+		freqs.forEach((f: number, i: number): void => {
 			const ctx = this.ctx;
 			const osc = ctx.createOscillator();
 			osc.type = 'square';

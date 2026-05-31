@@ -17,8 +17,8 @@ const STORAGE_KEY = 'rts.lang';
 type Dict = { [key: string]: string | Dict };
 
 const loaders: Record<Locale, () => Promise<{ default: Dict }>> = {
-	en: () => import('./locales/en.json'),
-	cs: () => import('./locales/cs.json'),
+	en: (): Promise<{ default: Dict }> => import('./locales/en.json'),
+	cs: (): Promise<{ default: Dict }> => import('./locales/cs.json'),
 };
 
 let current: Locale = DEFAULT_LOCALE;
@@ -32,7 +32,7 @@ function isLocale(value: string): value is Locale {
 export function detectLocale(): Locale {
 	const stored = localStorage.getItem(STORAGE_KEY);
 	if (stored && isLocale(stored)) return stored;
-	const base = (navigator.language ?? '').toLowerCase().split('-')[0];
+	const base = (navigator.language ?? '').toLowerCase().split('-')[0]!;
 	return isLocale(base) ? base : DEFAULT_LOCALE;
 }
 

@@ -97,7 +97,7 @@ export class Unit extends GameObject {
 		const start = worldToTile(this.pos);
 		const end = worldToTile(goal);
 		const tilePath = findPath(world.map, start, end);
-		this.path = tilePath.map(t => tileCenter(t.x, t.y));
+		this.path = tilePath.map((t: Vec2): Vec2 => tileCenter(t.x, t.y));
 		this.pathTarget = goal;
 		this.repathTimer = 0.6 + world.rng() * 0.4;
 	}
@@ -147,9 +147,7 @@ export class Unit extends GameObject {
 				if (this.cooldown <= 0) this.fire(t, world);
 			} else if (this.order === 'attack' || this.order === 'attackMove') {
 				// chase
-				if (this.repathTimer <= 0 || this.path.length === 0) {
-					this.setDestination(t.pos, world);
-				}
+				if (this.repathTimer <= 0 || this.path.length === 0) this.setDestination(t.pos, world);
 			}
 			void dt;
 		}
@@ -186,9 +184,7 @@ export class Unit extends GameObject {
 				} else if (this.path.length === 0) {
 					if (this.repathTimer <= 0) this.setDestination(tc, world);
 					// close enough but blocked from the exact centre: start harvesting anyway
-					if (this.path.length === 0 && dToTile < TILE * 1.6) {
-						this.harvestState = 'harvesting';
-					}
+					if (this.path.length === 0 && dToTile < TILE * 1.6) this.harvestState = 'harvesting';
 				}
 				break;
 			}
@@ -236,9 +232,7 @@ export class Unit extends GameObject {
 					this.unloadTimer = 0;
 					this.path = [];
 				} else if (this.path.length === 0) {
-					if (this.repathTimer <= 0) {
-						this.setDestination(this.homeRefinery.pos, world);
-					}
+					if (this.repathTimer <= 0) this.setDestination(this.homeRefinery.pos, world);
 					// Arrived at the closest reachable tile but still outside dockRange:
 					// dock anyway so the harvester never gets stuck idling.
 					if (this.path.length === 0 && d < this.homeRefinery.radius + TILE * 3) {
@@ -265,7 +259,7 @@ export class Unit extends GameObject {
 	}
 
 	private findRefinery(world: World): Building | null {
-		return nearest<Building>(this.pos, b => !b.dead && b.faction === this.faction && b.typeId === 'refinery', Infinity, [world.buildings]);
+		return nearest<Building>(this.pos, (b: Building): boolean => !b.dead && b.faction === this.faction && b.typeId === 'refinery', Infinity, [world.buildings]);
 	}
 
 	// steering
@@ -275,7 +269,7 @@ export class Unit extends GameObject {
 			this.vel.y *= 0.6;
 			return;
 		}
-		const node = this.path[0];
+		const node = this.path[0]!;
 		let dx = node.x - this.pos.x;
 		let dy = node.y - this.pos.y;
 		const d = Math.hypot(dx, dy);

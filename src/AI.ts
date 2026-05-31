@@ -61,11 +61,11 @@ export class EnemyAI {
 	private think(): void {
 		const credits = this.game.creditsFor('enemy');
 		const buildings = this.myBuildings();
-		const yard = buildings.find(b => b.typeId === 'yard');
+		const yard = buildings.find((b: Building): boolean => b.typeId === 'yard');
 		if (!yard) return;
 
 		// Keep enough harvesters.
-		const harvesters = this.myUnits().filter(u => u.isHarvester).length;
+		const harvesters = this.myUnits().filter((u: Unit): boolean => u.isHarvester).length;
 		if (this.has('refinery') && this.has('factory') && harvesters < 2 && credits >= UNITS.harvester.cost) {
 			this.trainEnemy('harvester');
 			return;
@@ -73,7 +73,7 @@ export class EnemyAI {
 
 		// Follow the build plan for structures.
 		if (this.planIndex < BUILD_PLAN.length) {
-			const next = BUILD_PLAN[this.planIndex];
+			const next = BUILD_PLAN[this.planIndex]!;
 			const def = BUILDINGS[next];
 			const reqMet = !def.requires || this.has(def.requires);
 			if (reqMet && credits >= def.cost) {
@@ -98,7 +98,7 @@ export class EnemyAI {
 				if (this.has('power')) roster.push('heavytank');
 			}
 			if (roster.length > 0) {
-				const pick = roster[Math.floor(this.game.rng() * roster.length)];
+				const pick = roster[Math.floor(this.game.rng() * roster.length)]!;
 				if (credits >= UNITS[pick].cost) this.trainEnemy(pick);
 			}
 		}
@@ -106,7 +106,7 @@ export class EnemyAI {
 
 	private trainEnemy(type: UnitTypeId): void {
 		const def = UNITS[type];
-		const from = this.myBuildings().find(b => b.typeId === def.from && b.complete);
+		const from = this.myBuildings().find((b: Building): boolean => b.typeId === def.from && b.complete);
 		if (!from) return;
 		if (!this.game.spend('enemy', def.cost)) return;
 		const spawn = this.game.findSpawnNear(from);
@@ -118,7 +118,7 @@ export class EnemyAI {
 	private placeEnemyBuilding(type: BuildingTypeId, yard: Building): boolean {
 		const def = BUILDINGS[type];
 		// search a free footprint spiralling out from the yard
-		const spot = spiralSearch(yard.tile.x, yard.tile.y, (tx, ty) => this.game.canPlaceBuilding(tx, ty, def.w, def.h), { minR: 2, maxR: 14, steps: 16 });
+		const spot = spiralSearch(yard.tile.x, yard.tile.y, (tx: number, ty: number): boolean => this.game.canPlaceBuilding(tx, ty, def.w, def.h), { minR: 2, maxR: 14, steps: 16 });
 		if (!spot) return false;
 		if (!this.game.spend('enemy', def.cost)) return false;
 		this.game.placeBuilding(type, 'enemy', spot, false);
@@ -126,7 +126,7 @@ export class EnemyAI {
 	}
 
 	private manageArmy(): void {
-		this.army = this.army.filter(u => !u.dead);
+		this.army = this.army.filter((u: Unit): boolean => !u.dead);
 		const playerYard = this.game.query.firstBuilding('player', 'yard');
 		if (this.attackTimer <= 0 && this.army.length >= this.p.attackSize) {
 			// launch an attack at the player base / nearest player entity

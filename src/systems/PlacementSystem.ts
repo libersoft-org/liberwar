@@ -57,7 +57,7 @@ export class PlacementSystem {
 
 	// Finds a free w×h footprint near an existing building.
 	findFreeSpotNear(b: Building, w: number, h: number): Vec2 {
-		const found = spiralSearch(b.tile.x, b.tile.y, (tx, ty) => this.canPlaceBuilding(tx, ty, w, h), { maxR: 12 });
+		const found = spiralSearch(b.tile.x, b.tile.y, (tx: number, ty: number): boolean => this.canPlaceBuilding(tx, ty, w, h), { maxR: 12 });
 		return found ?? { x: b.tile.x, y: b.tile.y };
 	}
 
@@ -67,7 +67,7 @@ export class PlacementSystem {
 		const cy = b.tile.y + b.def.h / 2;
 		// start the spiral just outside the footprint (half its size)
 		const half = Math.max(b.def.w, b.def.h) / 2;
-		const found = spiralSearch(cx, cy, (tx, ty) => this.map.passable(tx, ty), {
+		const found = spiralSearch(cx, cy, (tx: number, ty: number): boolean => this.map.passable(tx, ty), {
 			minR: half + 1,
 			maxR: half + 10,
 			steps: 12,

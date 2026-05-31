@@ -58,8 +58,8 @@ export class Renderer {
 		for (let ty = y0; ty <= y1; ty++) {
 			for (let tx = x0; tx <= x1; tx++) {
 				if (g.fog.state(tx, ty) === FOG_HIDDEN) continue;
-				drawTerrainTile(ctx, g.map.terrain[ty][tx], tx * TILE, ty * TILE, g.map.variation[ty][tx]);
-				if (g.map.harvest[ty][tx] > 5) drawHarvest(ctx, tx * TILE, ty * TILE, g.map.harvest[ty][tx]);
+				drawTerrainTile(ctx, g.map.terrain[ty]![tx]!, tx * TILE, ty * TILE, g.map.variation[ty]![tx]!);
+				if (g.map.harvest[ty]![tx]! > 5) drawHarvest(ctx, tx * TILE, ty * TILE, g.map.harvest[ty]![tx]!);
 			}
 		}
 	}
@@ -98,7 +98,7 @@ export class Renderer {
 			if (p.kind === 'rocket') {
 				// smoke trail
 				for (let i = 0; i < p.trail.length; i++) {
-					const t = p.trail[i];
+					const t = p.trail[i]!;
 					const a = (i / p.trail.length) * 0.5;
 					ctx.fillStyle = `rgba(180,180,180,${a})`;
 					ctx.beginPath();

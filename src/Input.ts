@@ -22,13 +22,15 @@ export class InputController {
 
 	constructor(game: Game) {
 		this.game = game;
-		this.boundDown = e => this.onDown(e);
-		this.boundUp = e => this.onUp(e);
-		this.boundMove = e => this.onMove(e);
-		this.boundKeyDown = e => this.onKeyDown(e);
-		this.boundKeyUp = e => this.keys.delete(e.key.toLowerCase());
-		this.boundContext = e => e.preventDefault();
-		this.boundWheel = e => this.onWheel(e);
+		this.boundDown = (e: MouseEvent): void => this.onDown(e);
+		this.boundUp = (e: MouseEvent): void => this.onUp(e);
+		this.boundMove = (e: MouseEvent): void => this.onMove(e);
+		this.boundKeyDown = (e: KeyboardEvent): void => this.onKeyDown(e);
+		this.boundKeyUp = (e: KeyboardEvent): void => {
+			this.keys.delete(e.key.toLowerCase());
+		};
+		this.boundContext = (e: Event): void => e.preventDefault();
+		this.boundWheel = (e: WheelEvent): void => this.onWheel(e);
 	}
 
 	attach(): void {

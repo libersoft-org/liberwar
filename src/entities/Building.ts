@@ -5,7 +5,6 @@ import type { World } from '../core/world.ts';
 import { fireWeapon } from '../combat/Weapon.ts';
 import { angleTo } from '../math/vec.ts';
 import { GameObject } from './GameObject.ts';
-
 let nextId = 100000;
 
 export class Building extends GameObject {
@@ -14,7 +13,6 @@ export class Building extends GameObject {
 	def: BuildingDef;
 	// top-left tile of footprint
 	tile: Vec2;
-
 	// 0..1 construction progress; 1 = complete
 	buildProgress: number;
 	cooldown = 0;
@@ -22,7 +20,7 @@ export class Building extends GameObject {
 	// rally point for produced units
 	rally: Vec2 | null = null;
 
-	constructor(typeId: BuildingTypeId, faction: Faction, tile: Vec2, instant = false) {
+	constructor(typeId: BuildingTypeId, faction: Faction, tile: Vec2, instant: boolean = false) {
 		const def = BUILDINGS[typeId];
 		const pos = {
 			x: tile.x * TILE + (def.w * TILE) / 2,

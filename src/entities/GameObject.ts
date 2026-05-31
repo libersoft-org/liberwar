@@ -8,7 +8,6 @@ import type { Entity } from '../core/world.ts';
  */
 export abstract class GameObject implements Entity {
 	abstract readonly kind: 'unit' | 'building';
-
 	id: number;
 	faction: Faction;
 	pos: Vec2;

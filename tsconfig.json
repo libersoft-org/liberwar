@@ -14,8 +14,14 @@
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
+		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
-		"exactOptionalPropertyTypes": false,
+		"noImplicitOverride": true,
+		"exactOptionalPropertyTypes": true,
+		"noUncheckedIndexedAccess": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedSideEffectImports": true,
+		"verbatimModuleSyntax": true,
 		"forceConsistentCasingInFileNames": true
 	},
 	"include": ["src"]

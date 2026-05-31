@@ -63,7 +63,6 @@ export class Game implements World {
 	private onQuit: () => void;
 	private onPauseChange: (paused: boolean) => void;
 	private screenShake = 0;
-
 	readonly sidebarW = 252;
 
 	constructor(canvas: HTMLCanvasElement, difficulty: Difficulty, onEnd: (result: 'win' | 'lose') => void, onQuit: () => void, onPauseChange: (paused: boolean) => void) {
@@ -78,14 +77,14 @@ export class Game implements World {
 		this.audio = new AudioEngine();
 
 		this.query = new EntityQuery(
-			() => this.units,
-			() => this.buildings
+			(): Unit[] => this.units,
+			(): Building[] => this.buildings
 		);
 		this.economy = new EconomySystem(this.query);
-		this.placement = new PlacementSystem(this.map, () => this.buildings);
+		this.placement = new PlacementSystem(this.map, (): Building[] => this.buildings);
 		this.combat = new CombatResolver(
-			() => this.units,
-			() => this.buildings
+			(): Unit[] => this.units,
+			(): Building[] => this.buildings
 		);
 		this.production = new ProductionSystem(this);
 		this.selection = new SelectionSystem(this);
@@ -153,8 +152,8 @@ export class Game implements World {
 
 	// base setup
 	private setupBases(): void {
-		const playerSpot = this.placement.findBaseSpot(8, 8, 22, 22, () => this.rng());
-		const enemySpot = this.placement.findBaseSpot(MAP_W - 22, MAP_H - 22, MAP_W - 8, MAP_H - 8, () => this.rng());
+		const playerSpot = this.placement.findBaseSpot(8, 8, 22, 22, (): number => this.rng());
+		const enemySpot = this.placement.findBaseSpot(MAP_W - 22, MAP_H - 22, MAP_W - 8, MAP_H - 8, (): number => this.rng());
 
 		this.createStartBase('player', playerSpot);
 		this.createStartBase('enemy', enemySpot);
@@ -245,13 +244,13 @@ export class Game implements World {
 	}
 
 	spawnExplosion(pos: Vec2, radius: number, big: boolean): void {
-		this.effects.push(new Effect('explosion', pos, radius, big, () => this.rng()));
+		this.effects.push(new Effect('explosion', pos, radius, big, (): number => this.rng()));
 		this.audio.play(big ? 'explosionBig' : 'explosionSmall');
 		if (big && this.fog.isVisibleWorld(pos)) this.screenShake = Math.min(8, this.screenShake + 5);
 	}
 
 	spawnMuzzle(pos: Vec2): void {
-		this.effects.push(new Effect('muzzle', pos, 4, false, () => this.rng()));
+		this.effects.push(new Effect('muzzle', pos, 4, false, (): number => this.rng()));
 	}
 
 	damageArea(pos: Vec2, radius: number, damage: number, faction: Faction): void {
@@ -365,17 +364,17 @@ export class Game implements World {
 				for (let y = b.tile.y; y < b.tile.y + b.def.h; y++) for (let x = b.tile.x; x < b.tile.x + b.def.w; x++) this.map.setBlocked(x, y, false);
 				this.spawnExplosion(b.pos, b.def.w * TILE * 0.5, true);
 				// secondary booms
-				this.effects.push(new Effect('explosion', { x: b.pos.x + 8, y: b.pos.y - 6 }, 20, true, () => this.rng()));
+				this.effects.push(new Effect('explosion', { x: b.pos.x + 8, y: b.pos.y - 6 }, 20, true, (): number => this.rng()));
 			}
 		}
 	}
 
 	private cleanup(): void {
 		this.selection.cleanup();
-		this.units = this.units.filter(u => !u.dead);
-		this.buildings = this.buildings.filter(b => !b.dead);
-		this.projectiles = this.projectiles.filter(p => !p.dead);
-		this.effects = this.effects.filter(e => !e.dead);
+		this.units = this.units.filter((u: Unit): boolean => !u.dead);
+		this.buildings = this.buildings.filter((b: Building): boolean => !b.dead);
+		this.projectiles = this.projectiles.filter((p: Projectile): boolean => !p.dead);
+		this.effects = this.effects.filter((e: Effect): boolean => !e.dead);
 	}
 
 	private updateFog(): void {
