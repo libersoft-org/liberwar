@@ -23,6 +23,7 @@
 	"pause": {
 		"title": "PAUZA",
 		"resume": "Pokračovat",
+		"restartMission": "Restartovat misi",
 		"endMission": "Ukončit misi"
 	},
 	"hud": {

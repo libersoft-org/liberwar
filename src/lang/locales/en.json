@@ -23,6 +23,7 @@
 	"pause": {
 		"title": "PAUSED",
 		"resume": "Resume",
+		"restartMission": "Restart mission",
 		"endMission": "End mission"
 	},
 	"hud": {

@@ -18,6 +18,7 @@ const endTitle = document.getElementById('endTitle') as HTMLHeadingElement;
 const restartBtn = document.getElementById('restartBtn') as HTMLDivElement;
 const pauseScreen = document.getElementById('pauseScreen') as HTMLDivElement;
 const resumeBtn = document.getElementById('resumeBtn') as HTMLDivElement;
+const restartMissionBtn = document.getElementById('restartMissionBtn') as HTMLDivElement;
 const endMissionBtn = document.getElementById('endMissionBtn') as HTMLDivElement;
 let game: Game | null = null;
 let difficulty: Difficulty = 'medium';
@@ -107,6 +108,7 @@ function startGame(): void {
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
 resumeBtn.addEventListener('click', (): void => game?.setPaused(false));
+restartMissionBtn.addEventListener('click', startGame);
 endMissionBtn.addEventListener('click', (): void => game?.quitToMenu());
 
 window.addEventListener('resize', (): void => {
