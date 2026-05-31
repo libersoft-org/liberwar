@@ -1,7 +1,6 @@
 import { STARTING_CREDITS } from '../core/config.ts';
 import type { Faction } from '../core/types.ts';
 import type { EntityQuery } from './EntityQuery.ts';
-
 const LOW_POWER_BUILD_SPEED = 0.45;
 
 // Handles credits and the power grid for both factions.
@@ -9,6 +8,12 @@ export class EconomySystem {
 	private credits: Record<Faction, number> = {
 		player: STARTING_CREDITS,
 		enemy: STARTING_CREDITS,
+	};
+	// Carries the sub-credit remainder so slow per-frame income (rate * dt) is
+	// not lost while the stored credit balance stays a whole number.
+	private creditsFrac: Record<Faction, number> = {
+		player: 0,
+		enemy: 0,
 	};
 	private query: EntityQuery;
 
@@ -25,7 +30,10 @@ export class EconomySystem {
 	}
 
 	addCredits(faction: Faction, amount: number): void {
-		this.credits[faction] += amount;
+		this.creditsFrac[faction] += amount;
+		const whole = Math.floor(this.creditsFrac[faction]);
+		this.credits[faction] += whole;
+		this.creditsFrac[faction] -= whole;
 	}
 
 	spend(faction: Faction, amount: number): boolean {

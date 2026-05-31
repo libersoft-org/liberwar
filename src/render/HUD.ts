@@ -103,7 +103,7 @@ export class HUD {
 		ctx.font = 'bold 18px Consolas, monospace';
 		ctx.textBaseline = 'middle';
 		ctx.textAlign = 'left';
-		ctx.fillText('$ ' + Math.floor(g.creditsFor('player')), sx + 12, 18);
+		ctx.fillText('$ ' + g.creditsFor('player'), sx + 12, 18);
 		// power
 		const p = g.powerStatus('player');
 		const low = p.consumed > p.produced;

@@ -204,7 +204,7 @@ export class Unit extends GameObject {
 					this.harvestState = 'seek';
 					this.harvestTile = null;
 				}
-				if (this.harvestLoad >= HARVESTER_CAPACITY - 1) {
+				if (this.harvestLoad >= HARVESTER_CAPACITY) {
 					this.harvestState = 'returning';
 					this.homeRefinery = this.findRefinery(world);
 					if (this.homeRefinery) this.setDestination(this.homeRefinery.pos, world);
@@ -249,6 +249,8 @@ export class Unit extends GameObject {
 				this.harvestLoad -= give;
 				world.addCredits(this.faction, give);
 				if (this.harvestLoad <= 0.5) {
+					// hand over the leftover fraction so the full load becomes credits
+					if (this.harvestLoad > 0) world.addCredits(this.faction, this.harvestLoad);
 					this.harvestLoad = 0;
 					this.harvestState = 'seek';
 					this.harvestTile = null;

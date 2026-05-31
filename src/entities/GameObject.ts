@@ -30,7 +30,7 @@ export abstract class GameObject implements Entity {
 	}
 
 	takeDamage(dmg: number): void {
-		this.hp -= dmg;
+		this.hp -= Math.round(dmg);
 		if (this.hp <= 0) {
 			this.hp = 0;
 			this.dead = true;
