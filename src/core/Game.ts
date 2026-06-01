@@ -184,10 +184,15 @@ export class Game implements World {
 
 	placeBuilding(type: BuildingTypeId, faction: Faction, tile: Vec2, instant: boolean): Building {
 		const b = new Building(type, faction, tile, instant);
-		for (let y = tile.y; y < tile.y + b.def.h; y++) for (let x = tile.x; x < tile.x + b.def.w; x++) this.map.setBlocked(x, y, true);
+		this.setFootprint(b, true);
 		this.buildings.push(b);
 		if (faction === 'enemy') this.audio.play('build');
 		return b;
+	}
+
+	// Marks (or clears) every map tile under a building's footprint as blocked.
+	private setFootprint(b: Building, blocked: boolean): void {
+		for (let y = b.tile.y; y < b.tile.y + b.def.h; y++) for (let x = b.tile.x; x < b.tile.x + b.def.w; x++) this.map.setBlocked(x, y, blocked);
 	}
 
 	// placement facade
@@ -273,12 +278,13 @@ export class Game implements World {
 	}
 
 	// Sell the currently selected player building for a health-scaled refund.
+	// The actual removal (freeing tiles, dismantle animation) is handled
+	// uniformly by the removal pipeline based on the 'sold' cause.
 	sellSelectedBuilding(): void {
 		const b = this.selection.selectedBuilding;
 		if (!b || b.faction !== 'player' || b.dead || !b.complete) return;
 		this.economy.addCredits('player', b.sellValue);
-		b.dead = true;
-		this.audio.play('build');
+		b.remove('sold');
 		this.selection.clearSelection();
 	}
 
@@ -355,7 +361,7 @@ export class Game implements World {
 		for (const p of this.projectiles) if (!p.dead) p.update(dt, this);
 		for (const e of this.effects) e.update(dt);
 
-		this.handleDeaths();
+		this.handleRemovals();
 		this.cleanup();
 		this.updateFog();
 
@@ -364,21 +370,39 @@ export class Game implements World {
 		this.checkVictory();
 	}
 
-	private handleDeaths(): void {
+	// Runs the one-time side effects for every entity that was scheduled for
+	// removal this frame, dispatching on *why* it was removed.
+	private handleRemovals(): void {
 		for (const u of this.units) {
-			if (u.dead && !u._deathHandled) {
-				u._deathHandled = true;
-				this.spawnExplosion(u.pos, u.radius + 6, u.radius > 10);
-			}
+			if (!u.dead || u._removalHandled) continue;
+			u._removalHandled = true;
+			this.onUnitRemoved(u);
 		}
 		for (const b of this.buildings) {
-			if (b.dead && !b._deathHandled) {
-				b._deathHandled = true;
-				for (let y = b.tile.y; y < b.tile.y + b.def.h; y++) for (let x = b.tile.x; x < b.tile.x + b.def.w; x++) this.map.setBlocked(x, y, false);
+			if (!b.dead || b._removalHandled) continue;
+			b._removalHandled = true;
+			this.onBuildingRemoved(b);
+		}
+	}
+
+	private onUnitRemoved(u: Unit): void {
+		// Units currently only ever leave the world by being destroyed.
+		this.spawnExplosion(u.pos, u.radius + 6, u.radius > 10);
+	}
+
+	private onBuildingRemoved(b: Building): void {
+		this.setFootprint(b, false); // every removal frees the occupied tiles
+		switch (b.removalCause) {
+			case 'sold':
+				this.effects.push(new Effect('sell', b.pos, b.def.w * TILE * 0.6, true, (): number => this.rng()));
+				this.audio.play('build');
+				break;
+			case 'destroyed':
+			default:
 				this.spawnExplosion(b.pos, b.def.w * TILE * 0.5, true);
-				// secondary booms
+				// secondary boom
 				this.effects.push(new Effect('explosion', { x: b.pos.x + 8, y: b.pos.y - 6 }, 20, true, (): number => this.rng()));
-			}
+				break;
 		}
 	}
 

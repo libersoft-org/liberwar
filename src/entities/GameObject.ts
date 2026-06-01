@@ -1,4 +1,4 @@
-import type { Faction, Vec2 } from '../core/types.ts';
+import type { Faction, RemovalCause, Vec2 } from '../core/types.ts';
 import type { Entity } from '../core/world.ts';
 
 /**
@@ -15,9 +15,11 @@ export abstract class GameObject implements Entity {
 	maxHp: number;
 	radius: number;
 	sight: number;
-	dead = false;
-	// internal flag used by the simulation to run death effects exactly once
-	_deathHandled = false;
+	// Why this entity was removed, or null while it is still alive. The single
+	// source of truth for removal; `dead` is derived from it.
+	removalCause: RemovalCause | null = null;
+	// internal flag used by the simulation to run removal effects exactly once
+	_removalHandled = false;
 
 	constructor(id: number, faction: Faction, pos: Vec2, maxHp: number, radius: number, sight: number) {
 		this.id = id;
@@ -29,11 +31,21 @@ export abstract class GameObject implements Entity {
 		this.sight = sight;
 	}
 
+	get dead(): boolean {
+		return this.removalCause !== null;
+	}
+
+	// Schedules this entity for removal. The first cause wins, so a unit that is
+	// already destroyed cannot later be "sold" and vice versa.
+	remove(cause: RemovalCause): void {
+		if (this.removalCause === null) this.removalCause = cause;
+	}
+
 	takeDamage(dmg: number): void {
 		this.hp -= Math.round(dmg);
 		if (this.hp <= 0) {
 			this.hp = 0;
-			this.dead = true;
+			this.remove('destroyed');
 		}
 	}
 }

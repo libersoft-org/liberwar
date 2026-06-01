@@ -126,9 +126,11 @@ export class Renderer {
 
 	private drawEffects(ctx: CanvasRenderingContext2D): void {
 		const g = this.game;
+		// additive glow pass for explosions / muzzle flashes
 		ctx.save();
 		ctx.globalCompositeOperation = 'lighter';
 		for (const e of g.effects) {
+			if (e.kind === 'sell') continue;
 			for (const part of e.particles) {
 				if (part.life <= 0) continue;
 				const a = Math.max(0, part.life / part.maxLife);
@@ -140,6 +142,42 @@ export class Renderer {
 			}
 		}
 		ctx.restore();
+		ctx.globalAlpha = 1;
+		// normal pass for the sell coin (a single spinning coin, no glow)
+		for (const e of g.effects) {
+			if (e.kind !== 'sell') continue;
+			for (const part of e.particles) {
+				if (part.life <= 0) continue;
+				const a = Math.max(0, part.life / part.maxLife);
+				ctx.globalAlpha = a;
+				const spin = part.spin ?? 0;
+				const sx = Math.abs(Math.cos(spin)); // edge-on when ~0 → spinning look
+				ctx.save();
+				ctx.translate(part.x, part.y);
+				ctx.scale(Math.max(0.1, sx), 1);
+				// coin body
+				ctx.fillStyle = part.color;
+				ctx.beginPath();
+				ctx.arc(0, 0, part.size, 0, Math.PI * 2);
+				ctx.fill();
+				// rim
+				ctx.lineWidth = 1.5;
+				ctx.strokeStyle = '#a9781f';
+				ctx.stroke();
+				// inner ring + currency mark for a coin-like look
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = '#e8b94d';
+				ctx.beginPath();
+				ctx.arc(0, 0, part.size * 0.62, 0, Math.PI * 2);
+				ctx.stroke();
+				ctx.fillStyle = '#a9781f';
+				ctx.font = `bold ${Math.round(part.size)}px sans-serif`;
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.fillText('$', 0, 1);
+				ctx.restore();
+			}
+		}
 		ctx.globalAlpha = 1;
 	}
 

@@ -86,6 +86,8 @@ export interface Particle {
 	maxLife: number;
 	size: number;
 	color: string;
+	spin?: number;
+	spinSpeed?: number;
 }
 
 export class Effect {
@@ -95,13 +97,29 @@ export class Effect {
 	particles: Particle[] = [];
 	big: boolean;
 	dead = false;
-	kind: 'explosion' | 'muzzle';
+	kind: 'explosion' | 'muzzle' | 'sell';
 
-	constructor(kind: 'explosion' | 'muzzle', pos: Vec2, radius: number, big: boolean, rng: () => number) {
+	constructor(kind: 'explosion' | 'muzzle' | 'sell', pos: Vec2, radius: number, big: boolean, rng: () => number) {
 		this.kind = kind;
 		this.pos = { ...pos };
 		this.big = big;
-		this.duration = kind === 'muzzle' ? 0.12 : big ? 0.6 : 0.35;
+		this.duration = kind === 'muzzle' ? 0.12 : kind === 'sell' ? 0.9 : big ? 0.6 : 0.35;
+		if (kind === 'sell') {
+			// A single big coin that arcs up, spins, and falls back as the structure is sold.
+			this.particles.push({
+				x: pos.x,
+				y: pos.y - radius * 0.3,
+				vx: 0,
+				vy: -150, // launch upward, gravity pulls it back
+				life: this.duration,
+				maxLife: this.duration,
+				size: 14,
+				color: '#ffd23d',
+				spin: 0,
+				spinSpeed: 12,
+			});
+			return;
+		}
 		const count = kind === 'muzzle' ? 5 : big ? 26 : 12;
 		for (let i = 0; i < count; i++) {
 			const a = rng() * Math.PI * 2;
@@ -123,12 +141,18 @@ export class Effect {
 
 	update(dt: number): void {
 		this.age += dt;
+		const isSell = this.kind === 'sell';
 		for (const p of this.particles) {
 			p.life -= dt;
 			p.x += p.vx * dt;
 			p.y += p.vy * dt;
-			p.vx *= 0.9;
-			p.vy *= 0.9;
+			if (isSell) {
+				p.vy += 320 * dt; // gravity pulls coins back down
+				if (p.spin !== undefined && p.spinSpeed !== undefined) p.spin += p.spinSpeed * dt;
+			} else {
+				p.vx *= 0.9;
+				p.vy *= 0.9;
+			}
 		}
 		if (this.age >= this.duration) this.dead = true;
 	}
