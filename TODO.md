@@ -4,6 +4,7 @@
 
 ## New Features
 
+- Create an autoupload build script
 - Press H to home (if there is any construction yard) + home icon + sell icon
 - Damaged buildings should burn (lightly - < 75%, medium - < 50%, strongly - < 25%)
 - Check whether all components are sufficiently atomized
