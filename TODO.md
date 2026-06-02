@@ -4,6 +4,8 @@
 
 ## New Features
 
+- Manual harvester unload in refinery doesn't work (it works only automatically)
+- Cancel structure construction while it is building
 - Create an autoupload build script
 - Press H to home (if there is any construction yard) + home icon + sell icon
 - Damaged buildings should burn (lightly - < 75%, medium - < 50%, strongly - < 25%)
