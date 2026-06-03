@@ -203,48 +203,51 @@ export class HUD {
 		if (!rect) return;
 		const b = this.game.selectedBuilding;
 		if (!b || b.faction !== 'player' || !b.complete) return;
-		const r = 7;
-		ctx.fillStyle = '#3a1b1b';
-		ctx.beginPath();
-		ctx.roundRect(rect.x, rect.y, rect.w, rect.h, r);
-		ctx.fill();
-		ctx.strokeStyle = '#ff7a5a';
-		ctx.lineWidth = 1.5;
-		ctx.beginPath();
-		ctx.roundRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1, r);
-		ctx.stroke();
-		ctx.fillStyle = '#ffd0c0';
-		ctx.font = 'bold 13px Consolas, monospace';
-		ctx.textAlign = 'left';
-		ctx.textBaseline = 'middle';
-		ctx.fillText(t('hud.sell'), rect.x + 10, rect.y + rect.h / 2);
-		ctx.fillStyle = '#ffd23d';
-		ctx.textAlign = 'right';
-		ctx.fillText('+$' + b.sellValue, rect.x + rect.w - 10, rect.y + rect.h / 2);
+		this.drawActionButton(ctx, rect, {
+			fill: '#3a1b1b',
+			stroke: '#ff7a5a',
+			labelColor: '#ffd0c0',
+			label: t('hud.sell'),
+			valueColor: '#ffd23d',
+			value: '+$' + b.sellValue,
+		});
 	}
 
 	// Always-present home button: jumps the camera to the construction yard.
 	private drawHomeButton(ctx: CanvasRenderingContext2D): void {
 		const rect = this.homeBtn;
 		if (!rect || !this.game.hasBuilding('player', 'yard')) return;
+		this.drawActionButton(ctx, rect, {
+			fill: '#16291a',
+			stroke: '#6cff7a',
+			labelColor: '#cdeecd',
+			label: t('hud.home'),
+			valueColor: '#9fe6a8',
+			value: '[H]',
+		});
+	}
+
+	// Shared renderer for the sidebar action buttons (home / sell): a rounded
+	// rect with a left-aligned label and a right-aligned value.
+	private drawActionButton(ctx: CanvasRenderingContext2D, rect: { x: number; y: number; w: number; h: number }, style: { fill: string; stroke: string; labelColor: string; label: string; valueColor: string; value: string }): void {
 		const r = 7;
-		ctx.fillStyle = '#16291a';
+		ctx.fillStyle = style.fill;
 		ctx.beginPath();
 		ctx.roundRect(rect.x, rect.y, rect.w, rect.h, r);
 		ctx.fill();
-		ctx.strokeStyle = '#6cff7a';
+		ctx.strokeStyle = style.stroke;
 		ctx.lineWidth = 1.5;
 		ctx.beginPath();
 		ctx.roundRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1, r);
 		ctx.stroke();
-		ctx.fillStyle = '#cdeecd';
 		ctx.font = 'bold 13px Consolas, monospace';
-		ctx.textAlign = 'left';
 		ctx.textBaseline = 'middle';
-		ctx.fillText(t('hud.home'), rect.x + 10, rect.y + rect.h / 2);
-		ctx.fillStyle = '#9fe6a8';
+		ctx.fillStyle = style.labelColor;
+		ctx.textAlign = 'left';
+		ctx.fillText(style.label, rect.x + 10, rect.y + rect.h / 2);
+		ctx.fillStyle = style.valueColor;
 		ctx.textAlign = 'right';
-		ctx.fillText('[H]', rect.x + rect.w - 10, rect.y + rect.h / 2);
+		ctx.fillText(style.value, rect.x + rect.w - 10, rect.y + rect.h / 2);
 	}
 
 	private drawButton(ctx: CanvasRenderingContext2D, btn: Btn): void {
