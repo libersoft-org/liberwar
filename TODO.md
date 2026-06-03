@@ -14,8 +14,9 @@
 - Main menu (even after game ended) - Single player, Multiplayer (disabled), Settings (audio, language etc.)
 - Make forced aspect ratio to 16:9 on all screen resolutions
 - Add flags to languages
-- Sell structure
-- Structure (and unit?) repair
+- New structure: Radar
+- New structure: Repair pod
+- New unit - medic
 - Roadkill infantry units by heavy units
 - Map editor (no more autogeneration)
 - Single Player - Campaign + Load level
