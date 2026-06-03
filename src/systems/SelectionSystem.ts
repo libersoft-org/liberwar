@@ -121,6 +121,16 @@ export class SelectionSystem {
 			return;
 		}
 
+		// harvester + own refinery? send harvesters to unload there.
+		const harvestersSel = this.selectedUnits.filter((u: Unit): boolean => u.isHarvester);
+		if (enemyB && enemyB.faction === 'player' && enemyB.typeId === 'refinery' && enemyB.complete && harvestersSel.length > 0) {
+			for (const h of harvestersSel) h.orderUnload(this.host, enemyB);
+			this.host.audio.play('move');
+			const others = this.selectedUnits.filter((u: Unit): boolean => !u.isHarvester);
+			this.issueMove(others, world);
+			return;
+		}
+
 		// harvester + harvest tile?
 		const tile = worldToTile(world);
 		const harvest = this.host.map.harvestAt(tile.x, tile.y);

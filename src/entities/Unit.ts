@@ -84,6 +84,16 @@ export class Unit extends GameObject {
 		if (tile) this.setDestination(tileCenter(tile.x, tile.y), world);
 	}
 
+	// Sends the harvester to a specific refinery to unload its current load.
+	orderUnload(world: World, refinery: Building): void {
+		if (!this.isHarvester) return;
+		this.order = 'harvest';
+		this.attackTarget = null;
+		this.harvestState = 'returning';
+		this.homeRefinery = refinery;
+		this.setDestination(refinery.pos, world);
+	}
+
 	stop(): void {
 		this.order = 'idle';
 		this.path = [];
