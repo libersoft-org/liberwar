@@ -52,8 +52,7 @@ export class ProductionSystem {
 		const def = BUILDINGS[type];
 		// Only a single construction yard may exist at a time.
 		if (type === 'yard' && this.host.hasBuilding('player', 'yard')) return { ok: false, reason: t('reason.onlyOne') };
-		if (def.requires)
-			for (const req of def.requires) if (!this.host.hasBuilding('player', req)) return { ok: false, reason: t('reason.requires', { name: t(`building.${req}`) }) };
+		if (def.requires) for (const req of def.requires) if (!this.host.hasBuilding('player', req)) return { ok: false, reason: t('reason.requires', { name: t(`building.${req}`) }) };
 		if (!this.host.economy.canAfford('player', def.cost)) return { ok: false, reason: t('reason.credits') };
 		return { ok: true };
 	}

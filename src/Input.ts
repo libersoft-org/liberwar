@@ -13,7 +13,7 @@ export class InputController {
 	selEnd: Vec2 = { x: 0, y: 0 };
 
 	private boundDown: (e: MouseEvent) => void;
- private boundUp: (e: MouseEvent) => void;
+	private boundUp: (e: MouseEvent) => void;
 	private boundMove: (e: MouseEvent) => void;
 	private boundKeyDown: (e: KeyboardEvent) => void;
 	private boundKeyUp: (e: KeyboardEvent) => void;
