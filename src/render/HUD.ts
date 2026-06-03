@@ -35,7 +35,6 @@ export class HUD {
 		const pad = 6;
 		const w = g.sidebarW - pad * 2;
 		this.minimap = { x: sx + pad, y: this.statsH + pad, size: w };
-
 		// Home + Sell action row sits just below the minimap, side by side.
 		const actionH = 34;
 		const actionGap = 4;
@@ -43,7 +42,6 @@ export class HUD {
 		const halfW = (w - actionGap) / 2;
 		this.homeBtn = { x: sx + pad, y: actionY, w: halfW, h: actionH };
 		this.sellBtn = { x: sx + pad + halfW + actionGap, y: actionY, w: halfW, h: actionH };
-
 		this.buttons = [];
 		const cols = 3;
 		const gap = 4;
@@ -85,11 +83,9 @@ export class HUD {
 		const sx = g.viewW;
 		const w = g.sidebarW;
 		const h = g.viewH;
-
 		// Rebuild the button layout when the set of trainable units changes
 		// (e.g. a producing building was built or lost).
 		if (this.visibleUnitIds().join(',') !== this.visibleUnitsKey) this.layout();
-
 		ctx.fillStyle = '#0c120c';
 		ctx.fillRect(sx, 0, w, h);
 		ctx.strokeStyle = '#2f4a36';
@@ -98,7 +94,6 @@ export class HUD {
 		ctx.moveTo(sx + 1, 0);
 		ctx.lineTo(sx + 1, h);
 		ctx.stroke();
-
 		this.drawStats(ctx, sx, w);
 		this.drawMinimap(ctx);
 		this.drawButtons(ctx);
@@ -137,10 +132,8 @@ export class HUD {
 		const mm = this.minimap;
 		const tiles = g.mapTiles;
 		const scale = mm.size / (tiles.w * TILE);
-
 		ctx.fillStyle = '#05080a';
 		ctx.fillRect(mm.x, mm.y, mm.size, mm.size);
-
 		// downsample terrain: sample every other tile for perf
 		const step = 1;
 		const cell = TILE * scale * step;
@@ -172,13 +165,11 @@ export class HUD {
 			ctx.fillStyle = u.faction === 'player' ? '#3da5ff' : '#ff5a4d';
 			ctx.fillRect(mm.x + u.pos.x * scale, mm.y + u.pos.y * scale, 2, 2);
 		}
-
 		// camera viewport rect
 		const cam = g.camera;
 		ctx.strokeStyle = 'rgba(255,255,255,0.8)';
 		ctx.lineWidth = 1;
 		ctx.strokeRect(mm.x + cam.x * scale, mm.y + cam.y * scale, cam.viewW * scale, cam.viewH * scale);
-
 		ctx.strokeStyle = '#2f4a36';
 		ctx.lineWidth = 1;
 		ctx.strokeRect(mm.x - 0.5, mm.y - 0.5, mm.size + 1, mm.size + 1);
@@ -193,7 +184,6 @@ export class HUD {
 		const firstUnitIdx = this.buttons.findIndex((b: Btn): boolean => b.kind === 'unit');
 		if (this.buttons.length > 0) ctx.fillText(t('hud.structures'), this.buttons[0]!.x, this.buttons[0]!.y - 8);
 		if (firstUnitIdx >= 0) ctx.fillText(t('hud.units'), this.buttons[firstUnitIdx]!.x, this.buttons[firstUnitIdx]!.y - 8);
-
 		for (const btn of this.buttons) this.drawButton(ctx, btn);
 	}
 
