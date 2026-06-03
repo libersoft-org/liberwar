@@ -296,6 +296,12 @@ export class Game implements World {
 		return this.selection.buildingAt(p);
 	}
 
+	// Center the camera on the player's construction yard, if any (Home).
+	homeView(): void {
+		const yard = this.query.firstBuilding('player', 'yard');
+		if (yard) this.camera.centerOn(yard.pos);
+	}
+
 	// Right-click command in the world.
 	commandAt(world: Vec2): void {
 		this.selection.commandAt(world);

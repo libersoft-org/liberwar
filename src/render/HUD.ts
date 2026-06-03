@@ -22,6 +22,7 @@ export class HUD {
 	private statsH = 50;
 	private visibleUnitsKey = '';
 	private sellBtn: { x: number; y: number; w: number; h: number } | null = null;
+	private homeBtn: { x: number; y: number; w: number; h: number } | null = null;
 
 	constructor(game: Game) {
 		this.game = game;
@@ -35,12 +36,20 @@ export class HUD {
 		const w = g.sidebarW - pad * 2;
 		this.minimap = { x: sx + pad, y: this.statsH + pad, size: w };
 
+		// Home + Sell action row sits just below the minimap, side by side.
+		const actionH = 34;
+		const actionGap = 4;
+		const actionY = this.minimap.y + this.minimap.size + pad;
+		const halfW = (w - actionGap) / 2;
+		this.homeBtn = { x: sx + pad, y: actionY, w: halfW, h: actionH };
+		this.sellBtn = { x: sx + pad + halfW + actionGap, y: actionY, w: halfW, h: actionH };
+
 		this.buttons = [];
 		const cols = 3;
 		const gap = 4;
 		const bw = (w - gap * (cols - 1)) / cols;
 		const bh = 74;
-		let y = this.minimap.y + this.minimap.size + 24; // leave room for "STRUCTURES" label
+		let y = actionY + actionH + 24; // leave room for the action row + "STRUCTURES" label
 		const place = (kind: 'structure' | 'unit', ids: string[], startY: number): number => {
 			let yy = startY;
 			ids.forEach((id: string, i: number): void => {
@@ -93,7 +102,8 @@ export class HUD {
 		this.drawStats(ctx, sx, w);
 		this.drawMinimap(ctx);
 		this.drawButtons(ctx);
-		this.drawSellButton(ctx, sx, w, h);
+		this.drawHomeButton(ctx);
+		this.drawSellButton(ctx);
 	}
 
 	private drawStats(ctx: CanvasRenderingContext2D, sx: number, w: number): void {
@@ -188,16 +198,11 @@ export class HUD {
 	}
 
 	// Contextual sell button, shown only while a player building is selected.
-	private drawSellButton(ctx: CanvasRenderingContext2D, sx: number, w: number, h: number): void {
+	private drawSellButton(ctx: CanvasRenderingContext2D): void {
+		const rect = this.sellBtn;
+		if (!rect) return;
 		const b = this.game.selectedBuilding;
-		if (!b || b.faction !== 'player' || !b.complete) {
-			this.sellBtn = null;
-			return;
-		}
-		const pad = 6;
-		const bh = 34;
-		const rect = { x: sx + pad, y: h - bh - pad, w: w - pad * 2, h: bh };
-		this.sellBtn = rect;
+		if (!b || b.faction !== 'player' || !b.complete) return;
 		const r = 7;
 		ctx.fillStyle = '#3a1b1b';
 		ctx.beginPath();
@@ -212,10 +217,34 @@ export class HUD {
 		ctx.font = 'bold 13px Consolas, monospace';
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'middle';
-		ctx.fillText(t('hud.sell'), rect.x + 12, rect.y + rect.h / 2);
+		ctx.fillText(t('hud.sell'), rect.x + 10, rect.y + rect.h / 2);
 		ctx.fillStyle = '#ffd23d';
 		ctx.textAlign = 'right';
-		ctx.fillText('+$' + b.sellValue, rect.x + rect.w - 12, rect.y + rect.h / 2);
+		ctx.fillText('+$' + b.sellValue, rect.x + rect.w - 10, rect.y + rect.h / 2);
+	}
+
+	// Always-present home button: jumps the camera to the construction yard.
+	private drawHomeButton(ctx: CanvasRenderingContext2D): void {
+		const rect = this.homeBtn;
+		if (!rect || !this.game.hasBuilding('player', 'yard')) return;
+		const r = 7;
+		ctx.fillStyle = '#16291a';
+		ctx.beginPath();
+		ctx.roundRect(rect.x, rect.y, rect.w, rect.h, r);
+		ctx.fill();
+		ctx.strokeStyle = '#6cff7a';
+		ctx.lineWidth = 1.5;
+		ctx.beginPath();
+		ctx.roundRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1, r);
+		ctx.stroke();
+		ctx.fillStyle = '#cdeecd';
+		ctx.font = 'bold 13px Consolas, monospace';
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'middle';
+		ctx.fillText(t('hud.home'), rect.x + 10, rect.y + rect.h / 2);
+		ctx.fillStyle = '#9fe6a8';
+		ctx.textAlign = 'right';
+		ctx.fillText('[H]', rect.x + rect.w - 10, rect.y + rect.h / 2);
 	}
 
 	private drawButton(ctx: CanvasRenderingContext2D, btn: Btn): void {
@@ -426,10 +455,18 @@ export class HUD {
 			return;
 		}
 
-		// sell button
+		// sell button (only active while a player building is selected)
 		const sb = this.sellBtn;
-		if (sb && x >= sb.x && x <= sb.x + sb.w && y >= sb.y && y <= sb.y + sb.h) {
+		const sbBuilding = g.selectedBuilding;
+		if (sb && sbBuilding && sbBuilding.faction === 'player' && sbBuilding.complete && x >= sb.x && x <= sb.x + sb.w && y >= sb.y && y <= sb.y + sb.h) {
 			if (button === 0) g.sellSelectedBuilding();
+			return;
+		}
+
+		// home button (only active while a construction yard exists)
+		const hb = this.homeBtn;
+		if (hb && g.hasBuilding('player', 'yard') && x >= hb.x && x <= hb.x + hb.w && y >= hb.y && y <= hb.y + hb.h) {
+			if (button === 0) g.homeView();
 			return;
 		}
 

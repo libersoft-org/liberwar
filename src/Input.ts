@@ -117,15 +117,23 @@ export class InputController {
 	private onKeyDown(e: KeyboardEvent): void {
 		const k = e.key.toLowerCase();
 		this.keys.add(k);
-		if (k === 'escape') {
-			// While paused, Escape resumes. Otherwise it first cancels an in-progress
-			// action, then a selection, and finally opens the pause dialog.
-			if (this.game.paused) this.game.setPaused(false);
-			else if (this.game.pendingPlacement) this.game.pendingPlacement = null;
-			else if (this.game.selectedUnits.length > 0 || this.game.selectedBuilding || this.game.selectedHarvestTile) this.game.clearSelection();
-			else this.game.setPaused(true);
-		} else if (k === 's') for (const u of this.game.selectedUnits) u.stop();
-		else if (k === 'h') for (const u of this.game.selectedUnits) if (u.isHarvester) u.orderHarvest(this.game);
+		switch (k) {
+			case 'escape':
+				this.onEscape();
+				break;
+			case 'h':
+				this.game.homeView();
+				break;
+		}
+	}
+
+	// While paused, Escape resumes. Otherwise it first cancels an in-progress
+	// action, then a selection, and finally opens the pause dialog.
+	private onEscape(): void {
+		if (this.game.paused) this.game.setPaused(false);
+		else if (this.game.pendingPlacement) this.game.pendingPlacement = null;
+		else if (this.game.selectedUnits.length > 0 || this.game.selectedBuilding || this.game.selectedHarvestTile) this.game.clearSelection();
+		else this.game.setPaused(true);
 	}
 
 	// per-frame camera scroll

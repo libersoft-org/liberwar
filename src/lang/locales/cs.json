@@ -30,7 +30,8 @@
 		"structures": "STAVBY",
 		"units": "JEDNOTKY",
 		"place": "UMÍSTI",
-		"sell": "PRODAT"
+		"sell": "PRODAT",
+		"home": "ZÁKLADNA"
 	},
 	"reason": {
 		"requires": "Vyžaduje {name}",

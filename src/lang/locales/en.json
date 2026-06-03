@@ -30,7 +30,8 @@
 		"structures": "STRUCTURES",
 		"units": "UNITS",
 		"place": "PLACE",
-		"sell": "SELL"
+		"sell": "SELL",
+		"home": "HOME"
 	},
 	"reason": {
 		"requires": "Requires {name}",
