@@ -1,3 +1,4 @@
+import { Graphics } from 'pixi.js';
 import { BUILD_ORDER, BUILDINGS, TRAIN_ORDER, UNITS } from '../core/config.ts';
 import { FOG_HIDDEN } from '../map/FogOfWar.ts';
 import { TILE } from '../core/types.ts';
@@ -5,7 +6,8 @@ import type { BuildingTypeId, UnitTypeId } from '../core/types.ts';
 import type { Game } from '../core/Game.ts';
 import type { UnitSlot } from '../systems/ProductionSystem.ts';
 import { t } from '../lang/lang.ts';
-import { drawBar } from './sprites.ts';
+import type { PixiStage } from './pixi/PixiStage.ts';
+import { TextPool } from './pixi/TextPool.ts';
 interface Btn {
 	kind: 'structure' | 'unit';
 	id: string;
@@ -14,6 +16,17 @@ interface Btn {
 	w: number;
 	h: number;
 }
+interface Rect {
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+}
+
+// Approximate width of a Consolas glyph at a given font size (monospace).
+function glyphW(size: number): number {
+	return size * 0.55;
+}
 
 export class HUD {
 	private game: Game;
@@ -21,11 +34,16 @@ export class HUD {
 	private minimap = { x: 6, y: 56, size: 200 };
 	private statsH = 50;
 	private visibleUnitsKey = '';
-	private sellBtn: { x: number; y: number; w: number; h: number } | null = null;
-	private homeBtn: { x: number; y: number; w: number; h: number } | null = null;
+	private sellBtn: Rect | null = null;
+	private homeBtn: Rect | null = null;
 
-	constructor(game: Game) {
+	private readonly gfx = new Graphics();
+	private readonly text: TextPool;
+
+	constructor(game: Game, stage: PixiStage) {
 		this.game = game;
+		stage.hud.addChild(this.gfx);
+		this.text = new TextPool(stage.hud);
 		this.layout();
 	}
 
@@ -53,14 +71,7 @@ export class HUD {
 			ids.forEach((id: string, i: number): void => {
 				const col = i % cols;
 				if (col === 0 && i > 0) yy += bh + gap;
-				this.buttons.push({
-					kind,
-					id,
-					x: sx + pad + col * (bw + gap),
-					y: yy,
-					w: bw,
-					h: bh,
-				});
+				this.buttons.push({ kind, id, x: sx + pad + col * (bw + gap), y: yy, w: bw, h: bh });
 			});
 			return yy + bh + gap;
 		};
@@ -79,168 +90,110 @@ export class HUD {
 	// rendering
 	render(): void {
 		const g = this.game;
-		const ctx = g.ctx;
 		const sx = g.viewW;
 		const w = g.sidebarW;
 		const h = g.viewH;
-		// Rebuild the button layout when the set of trainable units changes
-		// (e.g. a producing building was built or lost).
 		if (this.visibleUnitIds().join(',') !== this.visibleUnitsKey) this.layout();
-		ctx.fillStyle = '#0c120c';
-		ctx.fillRect(sx, 0, w, h);
-		ctx.strokeStyle = '#2f4a36';
-		ctx.lineWidth = 2;
-		ctx.beginPath();
-		ctx.moveTo(sx + 1, 0);
-		ctx.lineTo(sx + 1, h);
-		ctx.stroke();
-		this.drawStats(ctx, sx, w);
-		this.drawMinimap(ctx);
-		this.drawButtons(ctx);
-		this.drawHomeButton(ctx);
-		this.drawSellButton(ctx);
+
+		const gfx = this.gfx.clear();
+		this.text.begin();
+
+		gfx.rect(sx, 0, w, h).fill('#0c120c');
+		gfx
+			.moveTo(sx + 1, 0)
+			.lineTo(sx + 1, h)
+			.stroke({ width: 2, color: '#2f4a36' });
+
+		this.drawStats(gfx, sx, w);
+		this.drawMinimap(gfx);
+		this.drawButtons(gfx);
+		this.drawHomeButton(gfx);
+		this.drawSellButton(gfx);
+
+		this.text.end();
 	}
 
-	private drawStats(ctx: CanvasRenderingContext2D, sx: number, w: number): void {
+	private drawStats(gfx: Graphics, sx: number, w: number): void {
 		const g = this.game;
-		ctx.fillStyle = '#16221a';
-		ctx.fillRect(sx + 4, 4, w - 8, this.statsH - 8);
-		// credits
-		ctx.fillStyle = '#ffd23d';
-		ctx.font = 'bold 18px Consolas, monospace';
-		ctx.textBaseline = 'middle';
-		ctx.textAlign = 'left';
-		ctx.fillText('$ ' + g.creditsFor('player'), sx + 12, 18);
-		// power
+		gfx.rect(sx + 4, 4, w - 8, this.statsH - 8).fill('#16221a');
+		this.text.draw('$ ' + g.creditsFor('player'), sx + 12, 18, { size: 18, weight: 'bold', color: '#ffd23d', baseline: 'middle' });
 		const p = g.powerStatus('player');
 		const low = p.consumed > p.produced;
-		ctx.fillStyle = low ? '#ff5a4d' : '#6cff7a';
-		ctx.font = '12px Consolas, monospace';
-		ctx.fillText(`⚡ ${p.produced - p.consumed >= 0 ? '+' : ''}${p.produced - p.consumed}`, sx + 12, 36);
-		// power bar
+		const delta = p.produced - p.consumed;
+		this.text.draw(`\u26a1 ${delta >= 0 ? '+' : ''}${delta}`, sx + 12, 36, { size: 12, color: low ? '#ff5a4d' : '#6cff7a', baseline: 'middle' });
 		const barX = sx + 70;
 		const barW = w - 84;
 		const frac = p.produced === 0 ? 1 : Math.min(1, p.consumed / p.produced);
-		drawBar(ctx, barX, 31, barW, 8, frac, low ? '#ff5a4d' : '#3aa84a', {
-			bg: '#0a0f0a',
-			pad: 0,
-		});
+		this.bar(gfx, barX, 31, barW, 8, frac, low ? '#ff5a4d' : '#3aa84a', '#0a0f0a');
 	}
 
-	private drawMinimap(ctx: CanvasRenderingContext2D): void {
+	private bar(gfx: Graphics, x: number, y: number, w: number, h: number, frac: number, fill: string, bg: string): void {
+		gfx.rect(x, y, w, h).fill(bg);
+		gfx.rect(x, y, w * Math.max(0, Math.min(1, frac)), h).fill(fill);
+	}
+
+	private drawMinimap(gfx: Graphics): void {
 		const g = this.game;
 		const mm = this.minimap;
 		const tiles = g.mapTiles;
 		const scale = mm.size / (tiles.w * TILE);
-		ctx.fillStyle = '#05080a';
-		ctx.fillRect(mm.x, mm.y, mm.size, mm.size);
-		// downsample terrain: sample every other tile for perf
-		const step = 1;
-		const cell = TILE * scale * step;
-		for (let ty = 0; ty < tiles.h; ty += step) {
-			for (let tx = 0; tx < tiles.w; tx += step) {
+		const cell = TILE * scale;
+		gfx.rect(mm.x, mm.y, mm.size, mm.size).fill('#05080a');
+		for (let ty = 0; ty < tiles.h; ty++) {
+			for (let tx = 0; tx < tiles.w; tx++) {
 				const s = g.fog.state(tx, ty);
 				if (s === FOG_HIDDEN) continue;
 				const kind = g.map.terrain[ty]![tx]!;
 				let col: string;
 				if (g.map.harvest[ty]![tx]! > 5) col = '#caa028';
 				else col = kind === 'water' ? '#1e406a' : kind === 'rock' ? '#56565c' : kind === 'dirt' ? '#68543a' : '#3a5c2e';
-				ctx.fillStyle = col;
-				ctx.fillRect(mm.x + tx * TILE * scale, mm.y + ty * TILE * scale, cell + 0.5, cell + 0.5);
-				if (s === 1) {
-					ctx.fillStyle = 'rgba(5,8,10,0.45)';
-					ctx.fillRect(mm.x + tx * TILE * scale, mm.y + ty * TILE * scale, cell + 0.5, cell + 0.5);
-				}
+				const px = mm.x + tx * TILE * scale;
+				const py = mm.y + ty * TILE * scale;
+				gfx.rect(px, py, cell + 0.5, cell + 0.5).fill(col);
+				if (s === 1) gfx.rect(px, py, cell + 0.5, cell + 0.5).fill({ color: '#05080a', alpha: 0.45 });
 			}
 		}
-
-		// entities
 		for (const b of g.buildings) {
 			if (g.fog.hidesBuilding(b.faction, b.tile)) continue;
-			ctx.fillStyle = b.faction === 'player' ? '#7fd0ff' : '#ff8a7a';
-			ctx.fillRect(mm.x + b.pos.x * scale - 1, mm.y + b.pos.y * scale - 1, 3, 3);
+			gfx.rect(mm.x + b.pos.x * scale - 1, mm.y + b.pos.y * scale - 1, 3, 3).fill(b.faction === 'player' ? '#7fd0ff' : '#ff8a7a');
 		}
 		for (const u of g.units) {
 			if (g.fog.hidesUnit(u.faction, u.pos)) continue;
-			ctx.fillStyle = u.faction === 'player' ? '#3da5ff' : '#ff5a4d';
-			ctx.fillRect(mm.x + u.pos.x * scale, mm.y + u.pos.y * scale, 2, 2);
+			gfx.rect(mm.x + u.pos.x * scale, mm.y + u.pos.y * scale, 2, 2).fill(u.faction === 'player' ? '#3da5ff' : '#ff5a4d');
 		}
-		// camera viewport rect
 		const cam = g.camera;
-		ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-		ctx.lineWidth = 1;
-		ctx.strokeRect(mm.x + cam.x * scale, mm.y + cam.y * scale, cam.viewW * scale, cam.viewH * scale);
-		ctx.strokeStyle = '#2f4a36';
-		ctx.lineWidth = 1;
-		ctx.strokeRect(mm.x - 0.5, mm.y - 0.5, mm.size + 1, mm.size + 1);
+		gfx.rect(mm.x + cam.x * scale, mm.y + cam.y * scale, cam.viewW * scale, cam.viewH * scale).stroke({ width: 1, color: 'rgba(255,255,255,0.8)' });
+		gfx.rect(mm.x - 0.5, mm.y - 0.5, mm.size + 1, mm.size + 1).stroke({ width: 1, color: '#2f4a36' });
 	}
 
-	private drawButtons(ctx: CanvasRenderingContext2D): void {
-		// section labels
-		ctx.fillStyle = '#6cff7a';
-		ctx.font = 'bold 12px Consolas, monospace';
-		ctx.textAlign = 'left';
-		ctx.textBaseline = 'alphabetic';
+	private drawButtons(gfx: Graphics): void {
 		const firstUnitIdx = this.buttons.findIndex((b: Btn): boolean => b.kind === 'unit');
-		if (this.buttons.length > 0) ctx.fillText(t('hud.structures'), this.buttons[0]!.x, this.buttons[0]!.y - 8);
-		if (firstUnitIdx >= 0) ctx.fillText(t('hud.units'), this.buttons[firstUnitIdx]!.x, this.buttons[firstUnitIdx]!.y - 8);
-		for (const btn of this.buttons) this.drawButton(ctx, btn);
+		if (this.buttons.length > 0) this.text.draw(t('hud.structures'), this.buttons[0]!.x, this.buttons[0]!.y - 8, { size: 12, weight: 'bold', color: '#6cff7a' });
+		if (firstUnitIdx >= 0) this.text.draw(t('hud.units'), this.buttons[firstUnitIdx]!.x, this.buttons[firstUnitIdx]!.y - 8, { size: 12, weight: 'bold', color: '#6cff7a' });
+		for (const btn of this.buttons) this.drawButton(gfx, btn);
 	}
 
-	// Contextual sell button, shown only while a player building is selected.
-	private drawSellButton(ctx: CanvasRenderingContext2D): void {
+	private drawSellButton(gfx: Graphics): void {
 		const rect = this.sellBtn;
 		if (!rect) return;
 		const b = this.game.selectedBuilding;
 		if (!b || b.faction !== 'player' || !b.complete) return;
-		this.drawActionButton(ctx, rect, {
-			fill: '#3a1b1b',
-			stroke: '#ff7a5a',
-			labelColor: '#ffd0c0',
-			label: t('hud.sell'),
-			valueColor: '#ffd23d',
-			value: '+$' + b.sellValue,
-		});
+		this.drawActionButton(gfx, rect, { fill: '#3a1b1b', stroke: '#ff7a5a', labelColor: '#ffd0c0', label: t('hud.sell'), valueColor: '#ffd23d', value: '+$' + b.sellValue });
 	}
 
-	// Always-present home button: jumps the camera to the construction yard.
-	private drawHomeButton(ctx: CanvasRenderingContext2D): void {
+	private drawHomeButton(gfx: Graphics): void {
 		const rect = this.homeBtn;
 		if (!rect || !this.game.hasBuilding('player', 'yard')) return;
-		this.drawActionButton(ctx, rect, {
-			fill: '#16291a',
-			stroke: '#6cff7a',
-			labelColor: '#cdeecd',
-			label: t('hud.home'),
-			valueColor: '#9fe6a8',
-			value: '[H]',
-		});
+		this.drawActionButton(gfx, rect, { fill: '#16291a', stroke: '#6cff7a', labelColor: '#cdeecd', label: t('hud.home'), valueColor: '#9fe6a8', value: '[H]' });
 	}
 
-	// Shared renderer for the sidebar action buttons (home / sell): a rounded
-	// rect with a left-aligned label and a right-aligned value.
-	private drawActionButton(ctx: CanvasRenderingContext2D, rect: { x: number; y: number; w: number; h: number }, style: { fill: string; stroke: string; labelColor: string; label: string; valueColor: string; value: string }): void {
-		const r = 7;
-		ctx.fillStyle = style.fill;
-		ctx.beginPath();
-		ctx.roundRect(rect.x, rect.y, rect.w, rect.h, r);
-		ctx.fill();
-		ctx.strokeStyle = style.stroke;
-		ctx.lineWidth = 1.5;
-		ctx.beginPath();
-		ctx.roundRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1, r);
-		ctx.stroke();
-		ctx.font = 'bold 13px Consolas, monospace';
-		ctx.textBaseline = 'middle';
-		ctx.fillStyle = style.labelColor;
-		ctx.textAlign = 'left';
-		ctx.fillText(style.label, rect.x + 10, rect.y + rect.h / 2);
-		ctx.fillStyle = style.valueColor;
-		ctx.textAlign = 'right';
-		ctx.fillText(style.value, rect.x + rect.w - 10, rect.y + rect.h / 2);
+	private drawActionButton(gfx: Graphics, rect: Rect, style: { fill: string; stroke: string; labelColor: string; label: string; valueColor: string; value: string }): void {
+		gfx.roundRect(rect.x, rect.y, rect.w, rect.h, 7).fill(style.fill).stroke({ width: 1.5, color: style.stroke });
+		this.text.draw(style.label, rect.x + 10, rect.y + rect.h / 2, { size: 13, weight: 'bold', color: style.labelColor, baseline: 'middle' });
+		this.text.draw(style.value, rect.x + rect.w - 10, rect.y + rect.h / 2, { size: 13, weight: 'bold', color: style.valueColor, baseline: 'middle', align: 'right' });
 	}
 
-	private drawButton(ctx: CanvasRenderingContext2D, btn: Btn): void {
+	private drawButton(gfx: Graphics, btn: Btn): void {
 		const g = this.game;
 		let name: string;
 		let cost: number;
@@ -271,174 +224,89 @@ export class HUD {
 			if (head && head.type === id) progress = 1 - head.timeLeft / head.total;
 		}
 
-		// background
-		const r = 7;
-		ctx.fillStyle = available || progress >= 0 ? '#1b2a1f' : '#141a14';
-		ctx.beginPath();
-		ctx.roundRect(btn.x, btn.y, btn.w, btn.h, r);
-		ctx.fill();
-		ctx.strokeStyle = ready ? '#6cff7a' : '#2f4a36';
-		ctx.lineWidth = ready ? 2 : 1;
-		ctx.beginPath();
-		ctx.roundRect(btn.x + 0.5, btn.y + 0.5, btn.w - 1, btn.h - 1, r);
-		ctx.stroke();
+		const on = available || progress >= 0;
+		gfx
+			.roundRect(btn.x, btn.y, btn.w, btn.h, 7)
+			.fill(on ? '#1b2a1f' : '#141a14')
+			.stroke({ width: ready ? 2 : 1, color: ready ? '#6cff7a' : '#2f4a36' });
 
-		// icon
-		ctx.save();
-		ctx.globalAlpha = available || progress >= 0 ? 1 : 0.4;
-		this.drawIcon(ctx, btn.kind, btn.id, btn.x + btn.w / 2, btn.y + 22, 26);
-		ctx.restore();
+		this.drawIcon(gfx, btn.kind, btn.id, btn.x + btn.w / 2, btn.y + 22, 26, on ? 1 : 0.4);
 
-		// name
-		ctx.fillStyle = available || progress >= 0 ? '#cfe9d2' : '#5a6b5c';
-		ctx.font = '11px Consolas, monospace';
-		ctx.textAlign = 'center';
-		ctx.fillText(this.fit(ctx, name, btn.w - 4), btn.x + btn.w / 2, btn.y + btn.h - 20);
-		// cost
-		ctx.fillStyle = g.creditsFor('player') >= cost ? '#ffd23d' : '#aa6a3a';
-		ctx.fillText('$' + cost, btn.x + btn.w / 2, btn.y + btn.h - 9);
+		this.text.draw(this.fit(name, btn.w - 4, 11), btn.x + btn.w / 2, btn.y + btn.h - 20, { size: 11, color: on ? '#cfe9d2' : '#5a6b5c', align: 'center' });
+		this.text.draw('$' + cost, btn.x + btn.w / 2, btn.y + btn.h - 9, { size: 11, color: g.creditsFor('player') >= cost ? '#ffd23d' : '#aa6a3a', align: 'center' });
 
-		// progress overlay
 		if (progress >= 0 && progress < 1) {
-			ctx.save();
-			ctx.beginPath();
-			ctx.roundRect(btn.x, btn.y, btn.w, btn.h, r);
-			ctx.clip();
-			ctx.fillStyle = 'rgba(0,0,0,0.6)';
-			ctx.fillRect(btn.x, btn.y, btn.w, btn.h * (1 - progress));
-			ctx.fillStyle = '#6cff7a';
-			ctx.fillRect(btn.x, btn.y + btn.h - 2, btn.w * progress, 2);
-			ctx.restore();
+			gfx.rect(btn.x, btn.y, btn.w, btn.h * (1 - progress)).fill({ color: '#000000', alpha: 0.6 });
+			gfx.rect(btn.x, btn.y + btn.h - 2, btn.w * progress, 2).fill('#6cff7a');
 		}
-		if (ready) {
-			ctx.fillStyle = '#6cff7a';
-			ctx.font = 'bold 10px Consolas, monospace';
-			ctx.fillText(t('hud.place'), btn.x + btn.w / 2, btn.y + btn.h / 2 + 3);
-		}
+		if (ready) this.text.draw(t('hud.place'), btn.x + btn.w / 2, btn.y + btn.h / 2 + 3, { size: 10, weight: 'bold', color: '#6cff7a', align: 'center' });
 		if (queueCount > 0) {
-			ctx.fillStyle = '#000';
-			ctx.fillRect(btn.x + btn.w - 14, btn.y + 1, 13, 12);
-			ctx.fillStyle = '#fff';
-			ctx.font = 'bold 10px Consolas, monospace';
-			ctx.fillText('' + queueCount, btn.x + btn.w - 7, btn.y + 10);
+			gfx.rect(btn.x + btn.w - 14, btn.y + 1, 13, 12).fill('#000000');
+			this.text.draw('' + queueCount, btn.x + btn.w - 7, btn.y + 10, { size: 10, weight: 'bold', color: '#ffffff', align: 'center' });
 		}
 	}
 
-	private fit(ctx: CanvasRenderingContext2D, text: string, max: number): string {
-		if (ctx.measureText(text).width <= max) return text;
-		let t = text;
-		while (t.length > 1 && ctx.measureText(t + '…').width > max) t = t.slice(0, -1);
-		return t + '…';
+	private fit(text: string, max: number, size: number): string {
+		const cw = glyphW(size);
+		const maxChars = Math.floor(max / cw);
+		if (text.length <= maxChars) return text;
+		return text.slice(0, Math.max(1, maxChars - 1)) + '\u2026';
 	}
 
-	private drawIcon(ctx: CanvasRenderingContext2D, kind: 'structure' | 'unit', id: string, cx: number, cy: number, s: number): void {
+	private drawIcon(gfx: Graphics, kind: 'structure' | 'unit', id: string, cx: number, cy: number, s: number, alpha: number): void {
 		const blue = '#3da5ff';
 		const dk = '#1c4f80';
-		ctx.save();
-		ctx.translate(cx, cy);
+		const f = (col: string): { color: string; alpha: number } => ({ color: col, alpha });
 		if (kind === 'unit') {
 			if (id === 'harvester') {
-				ctx.fillStyle = dk;
-				ctx.fillRect(-s / 2, -s / 3, s, (s * 2) / 3);
-				ctx.fillStyle = blue;
-				ctx.fillRect(-s / 3, -s / 4, (s * 2) / 3, s / 2);
-				ctx.fillStyle = '#e0b020';
-				ctx.fillRect(-s / 4, -s / 6, s / 2, s / 3);
+				gfx.rect(cx - s / 2, cy - s / 3, s, (s * 2) / 3).fill(f(dk));
+				gfx.rect(cx - s / 3, cy - s / 4, (s * 2) / 3, s / 2).fill(f(blue));
+				gfx.rect(cx - s / 4, cy - s / 6, s / 2, s / 3).fill(f('#e0b020'));
 			} else if (id === 'rifleman' || id === 'rocketeer') {
-				ctx.fillStyle = blue;
-				ctx.beginPath();
-				ctx.ellipse(0, 2, s / 4, s / 2.5, 0, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.fillStyle = '#d8c69a';
-				ctx.beginPath();
-				ctx.arc(0, -s / 3, s / 6, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.strokeStyle = '#111';
-				ctx.lineWidth = id === 'rocketeer' ? 3 : 2;
-				ctx.beginPath();
-				ctx.moveTo(0, 0);
-				ctx.lineTo(s / 2, -s / 4);
-				ctx.stroke();
+				gfx.ellipse(cx, cy + 2, s / 4, s / 2.5).fill(f(blue));
+				gfx.circle(cx, cy - s / 3, s / 6).fill(f('#d8c69a'));
+				gfx
+					.moveTo(cx, cy)
+					.lineTo(cx + s / 2, cy - s / 4)
+					.stroke({ width: id === 'rocketeer' ? 3 : 2, color: '#111111', alpha });
 			} else {
-				// tanks
-				ctx.fillStyle = '#222';
-				ctx.fillRect(-s / 2, -s / 2.5, s, s / 5);
-				ctx.fillRect(-s / 2, s / 4, s, s / 5);
-				ctx.fillStyle = blue;
-				ctx.fillRect(-s / 2.5, -s / 4, s / 1.25, s / 2);
-				ctx.fillStyle = dk;
-				ctx.beginPath();
-				ctx.arc(0, 0, s / 4, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.fillRect(0, -2, s / 1.6, 4);
+				gfx.rect(cx - s / 2, cy - s / 2.5, s, s / 5).fill(f('#222222'));
+				gfx.rect(cx - s / 2, cy + s / 4, s, s / 5).fill(f('#222222'));
+				gfx.rect(cx - s / 2.5, cy - s / 4, s / 1.25, s / 2).fill(f(blue));
+				gfx.circle(cx, cy, s / 4).fill(f(dk));
+				gfx.rect(cx, cy - 2, s / 1.6, 4).fill(f(dk));
 			}
 		} else {
-			// structures
-			ctx.fillStyle = blue;
-			ctx.fillRect(-s / 2, -s / 2, s, s);
-			ctx.fillStyle = dk;
+			gfx.rect(cx - s / 2, cy - s / 2, s, s).fill(f(blue));
 			if (id === 'power') {
-				ctx.fillStyle = '#2a2a30';
-				ctx.beginPath();
-				ctx.moveTo(-s / 4, s / 2);
-				ctx.lineTo(-s / 6, -s / 2);
-				ctx.lineTo(s / 6, -s / 2);
-				ctx.lineTo(s / 4, s / 2);
-				ctx.closePath();
-				ctx.fill();
-				ctx.fillStyle = '#4af0c0';
-				ctx.fillRect(-s / 6, -s / 2, s / 3, 3);
+				gfx.poly([cx - s / 4, cy + s / 2, cx - s / 6, cy - s / 2, cx + s / 6, cy - s / 2, cx + s / 4, cy + s / 2]).fill(f('#2a2a30'));
+				gfx.rect(cx - s / 6, cy - s / 2, s / 3, 3).fill(f('#4af0c0'));
 			} else if (id === 'refinery') {
-				ctx.fillStyle = '#b8b860';
-				ctx.beginPath();
-				ctx.arc(s / 5, 0, s / 4, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.fillStyle = dk;
-				ctx.fillRect(-s / 2, s / 6, s, s / 4);
+				gfx.circle(cx + s / 5, cy, s / 4).fill(f('#b8b860'));
+				gfx.rect(cx - s / 2, cy + s / 6, s, s / 4).fill(f(dk));
 			} else if (id === 'barracks') {
-				ctx.fillStyle = '#5a6048';
-				for (let i = -s / 2 + 2; i < s / 2 - 2; i += 4) ctx.fillRect(-s / 2 + 2, i, s - 4, 2);
-				ctx.fillStyle = '#111';
-				ctx.fillRect(-s / 6, s / 6, s / 3, s / 3);
+				for (let i = -s / 2 + 2; i < s / 2 - 2; i += 4) gfx.rect(cx - s / 2 + 2, cy + i, s - 4, 2).fill(f('#5a6048'));
+				gfx.rect(cx - s / 6, cy + s / 6, s / 3, s / 3).fill(f('#111111'));
 			} else if (id === 'factory') {
-				ctx.fillStyle = '#3a3a42';
-				for (let i = -s / 2; i < s / 2; i += 5) {
-					ctx.beginPath();
-					ctx.moveTo(i, -s / 3);
-					ctx.lineTo(i + 4, -s / 3);
-					ctx.lineTo(i + 4, -s / 6);
-					ctx.closePath();
-					ctx.fill();
-				}
-				ctx.fillStyle = '#caa030';
-				ctx.fillRect(-s / 4, s / 6, s / 2, s / 4);
+				for (let i = -s / 2; i < s / 2; i += 5) gfx.poly([cx + i, cy - s / 3, cx + i + 4, cy - s / 3, cx + i + 4, cy - s / 6]).fill(f('#3a3a42'));
+				gfx.rect(cx - s / 4, cy + s / 6, s / 2, s / 4).fill(f('#caa030'));
 			} else if (id === 'turret') {
-				ctx.fillStyle = dk;
-				ctx.beginPath();
-				ctx.arc(0, 0, s / 2.5, 0, Math.PI * 2);
-				ctx.fill();
-				ctx.fillStyle = '#222';
-				ctx.fillRect(0, -2, s / 2, 4);
+				gfx.circle(cx, cy, s / 2.5).fill(f(dk));
+				gfx.rect(cx, cy - 2, s / 2, 4).fill(f('#222222'));
 			} else {
-				// yard
-				ctx.fillStyle = dk;
-				ctx.fillRect(-s / 3, -s / 3, (s * 2) / 3, (s * 2) / 3);
-				ctx.strokeStyle = '#caa030';
-				ctx.lineWidth = 2;
-				ctx.beginPath();
-				ctx.moveTo(-s / 2, s / 2);
-				ctx.lineTo(s / 2, -s / 2);
-				ctx.stroke();
+				gfx.rect(cx - s / 3, cy - s / 3, (s * 2) / 3, (s * 2) / 3).fill(f(dk));
+				gfx
+					.moveTo(cx - s / 2, cy + s / 2)
+					.lineTo(cx + s / 2, cy - s / 2)
+					.stroke({ width: 2, color: '#caa030', alpha });
 			}
 		}
-		ctx.restore();
 	}
 
 	// input
 	handleClick(x: number, y: number, button: number): void {
 		const g = this.game;
 		const mm = this.minimap;
-		// minimap
 		if (x >= mm.x && x <= mm.x + mm.size && y >= mm.y && y <= mm.y + mm.size) {
 			const scale = mm.size / (g.mapTiles.w * TILE);
 			const wx = (x - mm.x) / scale;
@@ -448,7 +316,6 @@ export class HUD {
 			return;
 		}
 
-		// sell button (only active while a player building is selected)
 		const sb = this.sellBtn;
 		const sbBuilding = g.selectedBuilding;
 		if (sb && sbBuilding && sbBuilding.faction === 'player' && sbBuilding.complete && x >= sb.x && x <= sb.x + sb.w && y >= sb.y && y <= sb.y + sb.h) {
@@ -456,7 +323,6 @@ export class HUD {
 			return;
 		}
 
-		// home button (only active while a construction yard exists)
 		const hb = this.homeBtn;
 		if (hb && g.hasBuilding('player', 'yard') && x >= hb.x && x <= hb.x + hb.w && y >= hb.y && y <= hb.y + hb.h) {
 			if (button === 0) g.homeView();

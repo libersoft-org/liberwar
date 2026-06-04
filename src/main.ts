@@ -1,4 +1,5 @@
 import { Game } from './core/Game.ts';
+import { PixiStage } from './render/pixi/PixiStage.ts';
 import type { Difficulty } from './AI.ts';
 import { APP_AUTHOR, APP_GITHUB, APP_NAME, APP_OFFICIAL_WEBSITE, APP_ORGANIZATION_WEBSITE, APP_VERSION, APP_YEAR } from './meta.ts';
 import { getLocale, initLang, LOCALE_LABELS, setLocale, SUPPORTED_LOCALES, t, type Locale } from './lang/lang.ts';
@@ -21,6 +22,7 @@ const resumeBtn = document.getElementById('resumeBtn') as HTMLDivElement;
 const restartMissionBtn = document.getElementById('restartMissionBtn') as HTMLDivElement;
 const endMissionBtn = document.getElementById('endMissionBtn') as HTMLDivElement;
 let game: Game | null = null;
+let stage: PixiStage | null = null;
 let difficulty: Difficulty = 'medium';
 let endResult: 'win' | 'lose' | null = null;
 
@@ -95,12 +97,13 @@ function onPauseChange(paused: boolean): void {
 }
 
 function startGame(): void {
+	if (!stage) return;
 	menu.style.display = 'none';
 	endScreen.style.display = 'none';
 	pauseScreen.style.display = 'none';
 	endResult = null;
 	if (game) game.stop();
-	game = new Game(canvas, difficulty, onEnd, returnToMenu, onPauseChange);
+	game = new Game(stage, difficulty, onEnd, returnToMenu, onPauseChange);
 	game.hud.layout();
 	game.start();
 }
@@ -127,6 +130,8 @@ async function bootstrap(): Promise<void> {
 	await initLang();
 	buildLanguageSwitcher();
 	applyDomTranslations();
+	stage = new PixiStage();
+	await stage.init(canvas);
 }
 
 void bootstrap();

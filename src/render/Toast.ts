@@ -1,18 +1,35 @@
+import { Graphics } from 'pixi.js';
+import type { PixiStage } from './pixi/PixiStage.ts';
+import { TextPool } from './pixi/TextPool.ts';
 interface ToastItem {
 	text: string;
 	life: number; // seconds remaining
 	total: number; // initial lifetime, for fade timing
 }
 
-// Lightweight on-canvas notification stack rendered in the top-right corner of
-// the game viewport. Messages fade out and disappear on their own.
+// Approximate width of a Consolas glyph at a given font size (monospace).
+function glyphW(size: number): number {
+	return size * 0.55;
+}
+
+/**
+ * Lightweight notification stack rendered in the top-right corner of the game
+ * viewport via PixiJS. Messages fade out and disappear on their own.
+ */
 export class Toast {
 	private items: ToastItem[] = [];
 	private readonly maxItems = 10;
 	private readonly lifetime = 3;
+	private readonly gfx = new Graphics();
+	private readonly text: TextPool;
 
-	// Queue a new message. Duplicates are allowed: the same text re-toasts so
-	// repeated denied actions keep giving feedback.
+	constructor(stage: PixiStage) {
+		stage.toast.addChild(this.gfx);
+		this.text = new TextPool(stage.toast);
+	}
+
+	// Queue a new message. Duplicates are allowed so repeated denied actions
+	// keep giving feedback.
 	push(text: string): void {
 		this.items.unshift({ text, life: this.lifetime, total: this.lifetime });
 		if (this.items.length > this.maxItems) this.items.length = this.maxItems;
@@ -23,41 +40,28 @@ export class Toast {
 		this.items = this.items.filter((i: ToastItem): boolean => i.life > 0);
 	}
 
-	render(ctx: CanvasRenderingContext2D, rightX: number): void {
-		if (this.items.length === 0) return;
+	render(rightX: number): void {
+		const gfx = this.gfx.clear();
+		this.text.begin();
+		if (this.items.length === 0) {
+			this.text.end();
+			return;
+		}
 		const pad = 10;
 		const h = 30;
 		const gap = 6;
 		const top = 12;
-		ctx.save();
-		ctx.font = 'bold 13px Consolas, monospace';
-		ctx.textBaseline = 'middle';
-		ctx.textAlign = 'left';
+		const size = 13;
 		this.items.forEach((item: ToastItem, idx: number): void => {
 			const alpha = Math.min(1, item.life / 0.4);
-			const tw = ctx.measureText(item.text).width;
+			const tw = item.text.length * glyphW(size);
 			const w = tw + pad * 2 + 16;
 			const x = rightX - w - 12;
 			const y = top + idx * (h + gap);
-			const r = 6;
-			ctx.globalAlpha = alpha;
-			ctx.fillStyle = '#3a1b1b';
-			ctx.beginPath();
-			ctx.roundRect(x, y, w, h, r);
-			ctx.fill();
-			ctx.strokeStyle = '#ff7a5a';
-			ctx.lineWidth = 1.5;
-			ctx.beginPath();
-			ctx.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, r);
-			ctx.stroke();
-			// warning dot
-			ctx.fillStyle = '#ffb347';
-			ctx.beginPath();
-			ctx.arc(x + pad + 2, y + h / 2, 4, 0, Math.PI * 2);
-			ctx.fill();
-			ctx.fillStyle = '#ffd0c0';
-			ctx.fillText(item.text, x + pad + 12, y + h / 2 + 1);
+			gfx.roundRect(x, y, w, h, 6).fill({ color: '#3a1b1b', alpha }).stroke({ width: 1.5, color: '#ff7a5a', alpha });
+			gfx.circle(x + pad + 2, y + h / 2, 4).fill({ color: '#ffb347', alpha });
+			this.text.draw(item.text, x + pad + 12, y + h / 2 + 1, { size, weight: 'bold', color: '#ffd0c0', baseline: 'middle', alpha });
 		});
-		ctx.restore();
+		this.text.end();
 	}
 }

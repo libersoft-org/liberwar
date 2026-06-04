@@ -8,7 +8,8 @@ import { Building } from '../entities/Building.ts';
 import { Unit } from '../entities/Unit.ts';
 import { EnemyAI } from '../AI.ts';
 import type { Difficulty } from '../AI.ts';
-import { Renderer } from '../render/Renderer.ts';
+import { PixiStage } from '../render/pixi/PixiStage.ts';
+import { WorldView } from '../render/pixi/WorldView.ts';
 import { HUD } from '../render/HUD.ts';
 import { Toast } from '../render/Toast.ts';
 import { InputController } from '../Input.ts';
@@ -31,12 +32,12 @@ import { EntityQuery } from '../systems/EntityQuery.ts';
  */
 export class Game implements World {
 	canvas: HTMLCanvasElement;
-	ctx: CanvasRenderingContext2D;
+	stage: PixiStage;
+	world: WorldView;
 	map: GameMap;
 	fog = new FogOfWar();
 	camera = new Camera();
 	audio: AudioEngine;
-	renderer: Renderer;
 	hud: HUD;
 	toast: Toast;
 	input: InputController;
@@ -66,9 +67,10 @@ export class Game implements World {
 	private screenShake = 0;
 	readonly sidebarW = 252;
 
-	constructor(canvas: HTMLCanvasElement, difficulty: Difficulty, onEnd: (result: 'win' | 'lose') => void, onQuit: () => void, onPauseChange: (paused: boolean) => void) {
-		this.canvas = canvas;
-		this.ctx = canvas.getContext('2d', { alpha: false })!;
+	constructor(stage: PixiStage, difficulty: Difficulty, onEnd: (result: 'win' | 'lose') => void, onQuit: () => void, onPauseChange: (paused: boolean) => void) {
+		this.stage = stage;
+		this.canvas = stage.canvas;
+		stage.reset();
 		this.onEnd = onEnd;
 		this.onQuit = onQuit;
 		this.onPauseChange = onPauseChange;
@@ -90,9 +92,9 @@ export class Game implements World {
 		this.production = new ProductionSystem(this);
 		this.selection = new SelectionSystem(this);
 
-		this.renderer = new Renderer(this);
-		this.hud = new HUD(this);
-		this.toast = new Toast();
+		this.world = new WorldView(this, stage);
+		this.hud = new HUD(this, stage);
+		this.toast = new Toast(stage);
 		this.input = new InputController(this);
 		this.ai = new EnemyAI(this, difficulty);
 
@@ -111,15 +113,10 @@ export class Game implements World {
 
 	// viewport
 	resize(): void {
-		const dpr = Math.min(window.devicePixelRatio || 1, 2);
 		const w = window.innerWidth;
 		const h = window.innerHeight;
-		this.canvas.width = Math.floor(w * dpr);
-		this.canvas.height = Math.floor(h * dpr);
-		this.canvas.style.width = w + 'px';
-		this.canvas.style.height = h + 'px';
-		this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 		this.camera.setViewport(w - this.sidebarW, h);
+		this.stage.resize(this.viewW, this.viewH);
 	}
 
 	get viewW(): number {
@@ -454,9 +451,11 @@ export class Game implements World {
 	}
 
 	private render(): void {
-		this.renderer.render();
+		this.world.render();
+		this.world.renderScreen();
 		this.hud.render();
-		this.toast.render(this.ctx, this.viewW);
+		this.toast.render(this.viewW);
+		this.stage.render();
 	}
 
 	// Shows a transient notification in the top-right corner.
