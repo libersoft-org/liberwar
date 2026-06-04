@@ -7,11 +7,9 @@ export class InputController {
 	private game: Game;
 	mouse: Vec2 = { x: 0, y: 0 };
 	private keys = new Set<string>();
-
 	selecting = false;
 	selStart: Vec2 = { x: 0, y: 0 };
 	selEnd: Vec2 = { x: 0, y: 0 };
-
 	private boundDown: (e: MouseEvent) => void;
 	private boundUp: (e: MouseEvent) => void;
 	private boundMove: (e: MouseEvent) => void;
@@ -65,15 +63,15 @@ export class InputController {
 
 	// mouse
 	private onDown(e: MouseEvent): void {
+		// While paused the Pixi pause overlay owns all input; ignore game clicks.
+		if (this.game.paused) return;
 		const x = e.clientX;
 		const y = e.clientY;
 		this.mouse = { x, y };
-
 		if (this.inSidebar(x)) {
 			this.game.hud.handleClick(x, y, e.button);
 			return;
 		}
-
 		// Minimap click handled by HUD even though it's in sidebar; covered above.
 		if (e.button === 0) {
 			// placement mode?

@@ -40,7 +40,7 @@ export function drawTerrainTile(g: Graphics, kind: TerrainKind, px: number, py: 
 	}
 }
 
-// ---- Units -------------------------------------------------------------
+// Units
 
 export interface UnitView {
 	container: Container;
@@ -120,7 +120,7 @@ function buildInfantry(container: Container, u: Unit, c: FactionPalette): UnitVi
 	return { container, body: null, turret };
 }
 
-// ---- Buildings ---------------------------------------------------------
+// Buildings
 
 export interface BuildingView {
 	container: Container;

@@ -76,7 +76,7 @@ export class WorldView {
 		this.renderOverlays();
 	}
 
-	// ---- dynamic ground (harvest dots) --------------------------------
+	// dynamic ground (harvest dots)
 	private renderHarvest(x0: number, y0: number, x1: number, y1: number): void {
 		const g = this.game;
 		const gfx = this.groundGfx.clear();
@@ -107,7 +107,7 @@ export class WorldView {
 		}
 	}
 
-	// ---- buildings ----------------------------------------------------
+	// buildings
 	private syncBuildings(): void {
 		const g = this.game;
 		const seen = new Set<Building>();
@@ -148,7 +148,7 @@ export class WorldView {
 		}
 	}
 
-	// ---- units --------------------------------------------------------
+	// units
 	private syncUnits(): void {
 		const g = this.game;
 		const seen = new Set<Unit>();
@@ -174,7 +174,7 @@ export class WorldView {
 		}
 	}
 
-	// ---- projectiles --------------------------------------------------
+	// projectiles
 	private renderProjectiles(): void {
 		const g = this.game;
 		const gfx = this.fxNormal.clear();
@@ -203,7 +203,7 @@ export class WorldView {
 		}
 	}
 
-	// ---- effects ------------------------------------------------------
+	// effects
 	private renderEffects(): void {
 		const g = this.game;
 		const add = this.fxAdd.clear();
@@ -228,7 +228,7 @@ export class WorldView {
 		}
 	}
 
-	// ---- fog ----------------------------------------------------------
+	// fog
 	private renderFog(x0: number, y0: number, x1: number, y1: number): void {
 		const gfx = this.fogGfx.clear();
 		const g = this.game;
@@ -242,7 +242,7 @@ export class WorldView {
 		}
 	}
 
-	// ---- overlays (health bars, selection, rally, harvest tile) -------
+	// overlays (health bars, selection, rally, harvest tile)
 	private renderOverlays(): void {
 		const g = this.game;
 		const gfx = this.overlayGfx.clear();
@@ -317,7 +317,7 @@ export class WorldView {
 		gfx.rect(x, y, w * Math.max(0, Math.min(1, frac)), h).fill(fill);
 	}
 
-	// ---- screen-space overlays (selection box, placement preview) -----
+	// screen-space overlays (selection box, placement preview)
 	renderScreen(): void {
 		const g = this.game;
 		const layer = this.stage.screen;

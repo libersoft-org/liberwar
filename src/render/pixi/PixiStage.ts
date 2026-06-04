@@ -9,9 +9,11 @@ import { Application, Container, Graphics } from 'pixi.js';
  *  - `screen`  : screen-space world overlays (selection box, placement preview).
  *  - `hud`     : the right-hand sidebar.
  *  - `toast`   : top-right notifications.
+ *  - `ui`      : full-screen menu / pause / end-game overlays (front-most).
  *
  * Created once and reused across matches; {@link reset} clears the scene so a
- * new {@link Game} can repopulate it.
+ * new {@link Game} can repopulate it. The `ui` layer is intentionally not
+ * cleared by {@link reset} so the menu/pause/end screens persist between matches.
  */
 export class PixiStage {
 	readonly app = new Application();
@@ -19,6 +21,7 @@ export class PixiStage {
 	readonly screen = new Container();
 	readonly hud = new Container();
 	readonly toast = new Container();
+	readonly ui = new Container();
 	private readonly worldMask = new Graphics();
 	private initialized = false;
 
@@ -34,7 +37,7 @@ export class PixiStage {
 			autoDensity: true,
 			preference: 'webgl',
 		});
-		this.app.stage.addChild(this.world, this.screen, this.hud, this.toast);
+		this.app.stage.addChild(this.world, this.screen, this.hud, this.toast, this.ui);
 		this.app.stage.addChild(this.worldMask);
 		this.world.mask = this.worldMask;
 		// We drive rendering manually from the Game loop.
