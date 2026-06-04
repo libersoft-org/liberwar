@@ -177,7 +177,10 @@ export class HUD {
 		const rect = this.sellBtn;
 		if (!rect) return;
 		const b = this.game.selectedBuilding;
-		if (!b || b.faction !== 'player' || !b.complete) return;
+		if (!b || b.faction !== 'player' || !b.complete) {
+			this.drawActionButton(gfx, rect, { fill: '#241616', stroke: '#5a3a36', labelColor: '#7a5a55', label: t('hud.sell'), valueColor: '#7a5a55', value: '' });
+			return;
+		}
 		this.drawActionButton(gfx, rect, { fill: '#3a1b1b', stroke: '#ff7a5a', labelColor: '#ffd0c0', label: t('hud.sell'), valueColor: '#ffd23d', value: '+$' + b.sellValue });
 	}
 
