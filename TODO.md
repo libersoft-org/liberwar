@@ -4,6 +4,7 @@
 
 ## New Features
 
+- Remake to pixijs
 - Create an autoupload build script
 - Home icon + sell icon instead of text buttons (also remove labels from cs and en.json)
 - Damaged buildings should burn (lightly - < 75%, medium - < 50%, strongly - < 25%)
