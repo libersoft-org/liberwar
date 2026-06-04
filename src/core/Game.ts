@@ -14,6 +14,7 @@ import { HUD } from '../render/HUD.ts';
 import { Toast } from '../render/Toast.ts';
 import { InputController } from '../Input.ts';
 import { MAP_H, MAP_W, TILE } from './types.ts';
+import { viewport } from './viewport.ts';
 import type { BuildingTypeId, Faction, FactionPalette, UnitTypeId, Vec2 } from './types.ts';
 import type { Entity, ProjectileSpec, World } from './world.ts';
 import { EconomySystem } from '../systems/EconomySystem.ts';
@@ -113,17 +114,17 @@ export class Game implements World {
 
 	// viewport
 	resize(): void {
-		const w = window.innerWidth;
-		const h = window.innerHeight;
+		const w = viewport.w;
+		const h = viewport.h;
 		this.camera.setViewport(w - this.sidebarW, h);
 		this.stage.resize(this.viewW, this.viewH);
 	}
 
 	get viewW(): number {
-		return window.innerWidth - this.sidebarW;
+		return viewport.w - this.sidebarW;
 	}
 	get viewH(): number {
-		return window.innerHeight;
+		return viewport.h;
 	}
 
 	// selection / production facade (delegates to systems)

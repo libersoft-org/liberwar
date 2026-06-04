@@ -1,4 +1,5 @@
 import { Application, Container, Graphics } from 'pixi.js';
+import { viewport } from '../../core/viewport.ts';
 
 /**
  * Owns the PixiJS {@link Application} and the top-level container hierarchy.
@@ -29,8 +30,8 @@ export class PixiStage {
 		if (this.initialized) return;
 		await this.app.init({
 			canvas,
-			width: window.innerWidth,
-			height: window.innerHeight,
+			width: viewport.w,
+			height: viewport.h,
 			background: '#05080a',
 			antialias: true,
 			resolution: Math.min(window.devicePixelRatio || 1, 2),
@@ -50,7 +51,7 @@ export class PixiStage {
 	}
 
 	resize(viewW: number, viewH: number): void {
-		this.app.renderer.resize(window.innerWidth, window.innerHeight);
+		this.app.renderer.resize(viewport.w, viewport.h);
 		this.worldMask.clear().rect(0, 0, viewW, viewH).fill('#ffffff');
 	}
 

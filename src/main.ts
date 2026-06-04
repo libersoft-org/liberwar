@@ -1,6 +1,7 @@
 import { Game } from './core/Game.ts';
 import { PixiStage } from './render/pixi/PixiStage.ts';
 import { Screens } from './render/pixi/Screens.ts';
+import { viewport } from './core/viewport.ts';
 import type { Difficulty } from './AI.ts';
 import { APP_NAME } from './meta.ts';
 import { initLang } from './lang/lang.ts';
@@ -36,10 +37,11 @@ function startGame(difficulty: Difficulty): void {
 }
 
 window.addEventListener('resize', (): void => {
+	viewport.update();
 	if (game) {
 		game.resize();
 		game.hud.layout();
-	} else if (stage) stage.resize(window.innerWidth, window.innerHeight);
+	} else if (stage) stage.resize(viewport.w, viewport.h);
 	screens?.resize();
 });
 
@@ -51,6 +53,7 @@ window.addEventListener('contextmenu', (e: MouseEvent): void => {
 async function bootstrap(): Promise<void> {
 	await initLang();
 	document.title = APP_NAME;
+	viewport.update();
 	stage = new PixiStage();
 	await stage.init(canvas);
 	screens = new Screens(stage, {

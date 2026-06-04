@@ -6,6 +6,7 @@ import type { Locale } from '../../lang/lang.ts';
 import type { Difficulty } from '../../AI.ts';
 import type { PixiStage } from './PixiStage.ts';
 import { UIButton } from './UIButton.ts';
+import { viewport } from '../../core/viewport.ts';
 
 export interface ScreenCallbacks {
 	onStart: (difficulty: Difficulty) => void;
@@ -48,10 +49,10 @@ export class Screens {
 	}
 
 	private get cx(): number {
-		return window.innerWidth / 2;
+		return viewport.w / 2;
 	}
 	private get H(): number {
-		return window.innerHeight;
+		return viewport.h;
 	}
 	private readonly req = (): void => this.stage.render();
 
@@ -98,8 +99,8 @@ export class Screens {
 
 	private gradientBg(c: Container, top: string, bottom: string): void {
 		const bg = new Graphics();
-		const w = window.innerWidth;
-		const h = window.innerHeight;
+		const w = viewport.w;
+		const h = viewport.h;
 		try {
 			const grad = new FillGradient(0, 0, 0, h);
 			grad.addColorStop(0, top);
@@ -113,7 +114,7 @@ export class Screens {
 
 	private dimBg(c: Container, alpha: number): void {
 		const bg = new Graphics();
-		bg.rect(0, 0, window.innerWidth, window.innerHeight).fill({ color: '#000000', alpha });
+		bg.rect(0, 0, viewport.w, viewport.h).fill({ color: '#000000', alpha });
 		bg.eventMode = 'static'; // swallow clicks so they don't reach the game canvas
 		c.addChild(bg);
 	}

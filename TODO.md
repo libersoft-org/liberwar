@@ -4,9 +4,9 @@
 
 ## New Features
 
-- Remake to pixijs
 - Create an autoupload build script
 - Home icon + sell icon instead of text buttons (also remove labels from cs and en.json)
+- Repair building
 - Damaged buildings should burn (lightly - < 75%, medium - < 50%, strongly - < 25%)
 - Check whether all components are sufficiently atomized
 - When I build a structure where a unit stands, the unit should move to the nearest empty tile - currently it gets stuck
