@@ -121,6 +121,8 @@ export class Screens {
 
 	private text(content: string, style: Partial<TextStyleOptions> & { fontSize: number }): Text {
 		const tx = new Text({ text: content, style: new TextStyle({ fontFamily: FONT, fill: '#cfe9d2', ...style }) });
+		tx.resolution = viewport.textResolution();
+		tx.roundPixels = true;
 		return tx;
 	}
 

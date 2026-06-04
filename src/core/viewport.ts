@@ -30,6 +30,22 @@ export const viewport = {
 		this.h = REFERENCE_HEIGHT;
 		this.w = window.innerWidth / this.scale;
 	},
+
+	/**
+	 * Resolution (texture pixel density) that {@link import('pixi.js').Text}
+	 * objects should use so they stay crisp under the scaled stage.
+	 *
+	 * The on-screen device-pixel density of a glyph is `scale * dpr`. Rendering
+	 * the texture at exactly that density maps 1:1 but small fonts then look soft
+	 * when the stage is shrunk (`scale < 1`). Instead we super-sample: rasterise
+	 * at *at least* the native device density (`dpr`) and more when the stage is
+	 * enlarged, so the glyph texture is down-sampled onto the screen — markedly
+	 * sharper for small text. Capped to keep texture memory bounded.
+	 */
+	textResolution(): number {
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		return Math.min(4, dpr * Math.max(1, this.scale));
+	},
 };
 
 viewport.update();

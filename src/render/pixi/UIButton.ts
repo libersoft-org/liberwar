@@ -1,4 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
+import { viewport } from '../../core/viewport.ts';
 export interface ButtonOpts {
 	width?: number; // fixed width; otherwise sized from the label
 	height?: number; // default 44
@@ -28,6 +29,8 @@ export class UIButton extends Container {
 		this.paddingX = opts.paddingX ?? 28;
 		this._h = opts.height ?? 44;
 		this.txt = new Text({ text, style: this.makeStyle() });
+		this.txt.resolution = viewport.textResolution();
+		this.txt.roundPixels = true;
 		this.txt.anchor.set(0.5);
 		this.addChild(this.bg, this.txt);
 		this.eventMode = 'static';

@@ -1,4 +1,5 @@
 import { Container, Text, TextStyle } from 'pixi.js';
+import { viewport } from '../../core/viewport.ts';
 export type TextAlign = 'left' | 'center' | 'right';
 export type TextBaseline = 'top' | 'middle' | 'alphabetic';
 export interface TextOpts {
@@ -34,6 +35,7 @@ export class TextPool {
 		this.index++;
 		node.text = content;
 		node.style = this.style(opts);
+		node.resolution = viewport.textResolution();
 		node.x = x;
 		node.y = y;
 		node.alpha = opts.alpha ?? 1;
@@ -47,6 +49,7 @@ export class TextPool {
 
 	private create(): Text {
 		const node = new Text({ text: '' });
+		node.roundPixels = true;
 		this.layer.addChild(node);
 		this.nodes.push(node);
 		return node;
