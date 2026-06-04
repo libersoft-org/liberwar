@@ -1,35 +1,34 @@
 /**
- * Fixed-aspect-ratio viewport.
+ * Resolution-independent viewport based on a fixed *reference height*.
  *
- * The whole game (menu, HUD and the match itself) renders into a logical area
- * whose size is derived from the window height: the height always fills the
- * viewport and the width is `height * ASPECT`. The resulting rectangle is
- * centered horizontally, so narrower windows get pillarbox bars on the sides.
+ * The game is authored against {@link REFERENCE_HEIGHT} logical pixels tall.
+ * On any real screen the whole scene is uniformly scaled by
+ * `scale = window.innerHeight / REFERENCE_HEIGHT`, so an object always occupies
+ * the same fraction of the screen height regardless of the device resolution.
  *
- * Every module that previously read `window.innerWidth` / `window.innerHeight`
- * should read {@link viewport}`.w` / `.h` instead so the fixed ratio is honoured
- * consistently.
+ * The width is *not* constrained: the logical width grows/shrinks with the
+ * window's aspect ratio (`w = window.innerWidth / scale`), so wider screens
+ * simply reveal more of the world horizontally — there are no letterbox bars.
+ *
+ * Every module that needs sizes should read {@link viewport}`.w` / `.h`
+ * (logical pixels) and apply {@link viewport}`.scale` only when converting to or
+ * from physical/window pixels (e.g. mouse input).
  */
-export const ASPECT = 16 / 9;
+export const REFERENCE_HEIGHT = 1080;
 
 export const viewport = {
-	/** Logical width of the rendered area (CSS pixels). */
+	/** Logical width (window width expressed in reference pixels). */
 	w: 0,
-	/** Logical height of the rendered area (CSS pixels). */
-	h: 0,
-	/** Horizontal offset of the rendered area inside the window (pillarbox). */
-	left: 0,
-	/** Vertical offset of the rendered area inside the window. */
-	top: 0,
+	/** Logical height — always {@link REFERENCE_HEIGHT}. */
+	h: REFERENCE_HEIGHT,
+	/** Physical pixels per logical pixel (`innerHeight / REFERENCE_HEIGHT`). */
+	scale: 1,
 
-	/** Recompute the logical size from the current window dimensions. */
+	/** Recompute the logical size and scale from the current window. */
 	update(): void {
-		const h = window.innerHeight;
-		const w = Math.round(h * ASPECT);
-		this.w = w;
-		this.h = h;
-		this.left = Math.round((window.innerWidth - w) / 2);
-		this.top = 0;
+		this.scale = window.innerHeight / REFERENCE_HEIGHT;
+		this.h = REFERENCE_HEIGHT;
+		this.w = window.innerWidth / this.scale;
 	},
 };
 

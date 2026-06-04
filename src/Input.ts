@@ -63,12 +63,12 @@ export class InputController {
 	}
 
 	// Convert a window-space mouse event into the canvas' logical coordinate
-	// space, accounting for the fixed-aspect letterbox offset and any scaling.
+	// space. The whole scene is uniformly scaled by `viewport.scale`, so we undo
+	// that scale (the canvas itself fills the window, top-left aligned).
 	private localPoint(e: MouseEvent): Vec2 {
 		const r = this.game.canvas.getBoundingClientRect();
-		const sx = r.width === 0 ? 1 : viewport.w / r.width;
-		const sy = r.height === 0 ? 1 : viewport.h / r.height;
-		return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+		const s = viewport.scale || 1;
+		return { x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s };
 	}
 
 	// mouse

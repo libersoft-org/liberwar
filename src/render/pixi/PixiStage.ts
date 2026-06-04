@@ -30,8 +30,8 @@ export class PixiStage {
 		if (this.initialized) return;
 		await this.app.init({
 			canvas,
-			width: viewport.w,
-			height: viewport.h,
+			width: window.innerWidth,
+			height: window.innerHeight,
 			background: '#05080a',
 			antialias: true,
 			resolution: Math.min(window.devicePixelRatio || 1, 2),
@@ -40,6 +40,7 @@ export class PixiStage {
 		});
 		this.app.stage.addChild(this.world, this.screen, this.hud, this.toast, this.ui);
 		this.app.stage.addChild(this.worldMask);
+		this.app.stage.scale.set(viewport.scale);
 		this.world.mask = this.worldMask;
 		// We drive rendering manually from the Game loop.
 		this.app.ticker.stop();
@@ -51,7 +52,8 @@ export class PixiStage {
 	}
 
 	resize(viewW: number, viewH: number): void {
-		this.app.renderer.resize(viewport.w, viewport.h);
+		this.app.renderer.resize(window.innerWidth, window.innerHeight);
+		this.app.stage.scale.set(viewport.scale);
 		this.worldMask.clear().rect(0, 0, viewW, viewH).fill('#ffffff');
 	}
 
