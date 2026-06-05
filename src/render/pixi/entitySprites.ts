@@ -72,6 +72,13 @@ const SPRITE_UNITS: Partial<Record<UnitTypeId, SpriteUnitDef>> = {
 		},
 		scale: 4.5,
 	},
+	rocketeer: {
+		art: {
+			player: 'sprites/units/rocketeer-blue.webp',
+			enemy: 'sprites/units/rocketeer-red.webp',
+		},
+		scale: 4.5,
+	},
 	lighttank: {
 		art: {
 			player: 'sprites/units/tank-light-blue.webp',
@@ -108,18 +115,14 @@ export function unitSpriteTexture(typeId: UnitTypeId, faction: Faction): Texture
 }
 
 export function buildUnitView(u: Unit): UnitView {
-	const c = FACTION_COLORS[u.faction];
 	const container = new Container();
-
 	// shadow (static)
 	const shadow = new Graphics();
 	shadow.ellipse(0, u.radius * 0.5, u.radius * 1.05, u.radius * 0.5).fill({ color: '#000000', alpha: 0.28 });
 	container.addChild(shadow);
-
-	if (u.typeId === 'rocketeer') return buildInfantry(container, u, c);
 	const def = SPRITE_UNITS[u.typeId];
-	if (def) return { container, body: addSpriteBody(container, texture(textureKey(u.typeId, u.faction)), u.radius * def.scale), turret: null };
-	return buildInfantry(container, u, c);
+	const tex = def ? texture(textureKey(u.typeId, u.faction)) : Texture.EMPTY;
+	return { container, body: addSpriteBody(container, tex, u.radius * (def?.scale ?? 4)), turret: null };
 }
 
 // Builds a rotating body holding a single square sprite. The art faces left
@@ -135,26 +138,6 @@ function addSpriteBody(container: Container, texture: Texture, size: number): Co
 	body.addChild(sprite);
 	container.addChild(body);
 	return body;
-}
-
-function buildInfantry(container: Container, u: Unit, c: FactionPalette): UnitView {
-	const rocket = u.typeId === 'rocketeer';
-	const body = new Graphics();
-	body.ellipse(0, 0, 4, 5.5).fill(c.dark);
-	body.ellipse(0, -1, 3, 4).fill(c.primary);
-	body.circle(0, -4.5, 2.4).fill(rocket ? '#caa14d' : '#d8c69a');
-	container.addChild(body);
-
-	// weapon rotates with turret angle: a line of length 8 from the origin
-	const turret = new Graphics();
-	turret
-		.moveTo(0, 0)
-		.lineTo(8, 0)
-		.stroke({ width: rocket ? 2 : 1.4, color: '#1c1c1c' });
-	container.addChild(turret);
-
-	// Infantry body itself does not rotate with facing.
-	return { container, body: null, turret };
 }
 
 // Buildings

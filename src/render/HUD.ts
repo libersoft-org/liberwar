@@ -304,23 +304,7 @@ export class HUD {
 		const dk = '#1c4f80';
 		const f = (col: string): { color: string; alpha: number } => ({ color: col, alpha });
 		if (kind === 'unit') {
-			const tex = unitSpriteTexture(id as UnitTypeId, 'player');
-			if (tex) {
-				this.icons.draw(tex, cx, cy, s * 1.5, alpha);
-			} else if (id === 'rocketeer') {
-				gfx.ellipse(cx, cy + 2, s / 4, s / 2.5).fill(f(blue));
-				gfx.circle(cx, cy - s / 3, s / 6).fill(f('#d8c69a'));
-				gfx
-					.moveTo(cx, cy)
-					.lineTo(cx + s / 2, cy - s / 4)
-					.stroke({ width: id === 'rocketeer' ? 3 : 2, color: '#111111', alpha });
-			} else {
-				gfx.rect(cx - s / 2, cy - s / 2.5, s, s / 5).fill(f('#222222'));
-				gfx.rect(cx - s / 2, cy + s / 4, s, s / 5).fill(f('#222222'));
-				gfx.rect(cx - s / 2.5, cy - s / 4, s / 1.25, s / 2).fill(f(blue));
-				gfx.circle(cx, cy, s / 4).fill(f(dk));
-				gfx.rect(cx, cy - 2, s / 1.6, 4).fill(f(dk));
-			}
+			this.icons.draw(unitSpriteTexture(id as UnitTypeId, 'player') ?? Texture.EMPTY, cx, cy, s * 1.5, alpha);
 		} else {
 			gfx.rect(cx - s / 2, cy - s / 2, s, s).fill(f(blue));
 			if (id === 'power') {
