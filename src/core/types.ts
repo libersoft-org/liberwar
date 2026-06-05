@@ -14,7 +14,7 @@ export interface Vec2 {
 	y: number;
 }
 export type TerrainKind = 'grass' | 'dirt' | 'rock' | 'water';
-export type UnitTypeId = 'harvester' | 'rifleman' | 'rocketeer' | 'lighttank' | 'heavytank';
+export type UnitTypeId = 'harvester' | 'infantry' | 'rocketeer' | 'lighttank' | 'heavytank';
 export type BuildingTypeId =
 	| 'yard' // Construction Yard (HQ)
 	| 'power' // Power Plant

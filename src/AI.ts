@@ -90,7 +90,7 @@ export class EnemyAI {
 		if (credits > 500) {
 			const roster: UnitTypeId[] = [];
 			if (this.has('barracks')) {
-				roster.push('rifleman');
+				roster.push('infantry');
 				if (this.has('factory')) roster.push('rocketeer');
 			}
 			if (this.has('factory')) {

@@ -2,6 +2,7 @@ import { Game } from './core/Game.ts';
 import { PixiStage } from './render/pixi/PixiStage.ts';
 import { Screens } from './render/pixi/Screens.ts';
 import { preloadTextures } from './render/pixi/textures.ts';
+import { unitSpriteUrls } from './render/pixi/entitySprites.ts';
 import { viewport } from './core/viewport.ts';
 import type { Difficulty } from './AI.ts';
 import { APP_NAME } from './meta.ts';
@@ -57,7 +58,7 @@ async function bootstrap(): Promise<void> {
 	viewport.update();
 	stage = new PixiStage();
 	await stage.init(canvas);
-	await preloadTextures();
+	await preloadTextures(unitSpriteUrls());
 	screens = new Screens(stage, {
 		onStart: startGame,
 		onResume: (): void => game?.setPaused(false),

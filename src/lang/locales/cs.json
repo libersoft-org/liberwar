@@ -42,7 +42,7 @@
 	},
 	"unit": {
 		"harvester": "Harvester",
-		"rifleman": "Střelec",
+		"infantry": "Pěchota",
 		"rocketeer": "Raketometčík",
 		"lighttank": "Lehký tank",
 		"heavytank": "Těžký tank"

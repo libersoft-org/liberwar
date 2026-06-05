@@ -13,8 +13,8 @@ export const UNITS: Record<UnitTypeId, UnitDef> = {
 		requires: 'refinery',
 		isHarvester: true,
 	},
-	rifleman: {
-		id: 'rifleman',
+	infantry: {
+		id: 'infantry',
 		cost: 100,
 		buildTime: 2,
 		hp: 80,
@@ -147,7 +147,7 @@ export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 };
 // Order shown in the build sidebar.
 export const BUILD_ORDER: BuildingTypeId[] = ['yard', 'power', 'refinery', 'barracks', 'factory', 'turret'];
-export const TRAIN_ORDER: UnitTypeId[] = ['rifleman', 'rocketeer', 'harvester', 'lighttank', 'heavytank'];
+export const TRAIN_ORDER: UnitTypeId[] = ['infantry', 'rocketeer', 'harvester', 'lighttank', 'heavytank'];
 export const FACTION_COLORS: Record<Faction, FactionPalette> = {
 	player: { primary: '#3da5ff', dark: '#1c4f80', light: '#9fd2ff' },
 	enemy: { primary: '#ff5a4d', dark: '#7a261f', light: '#ffb0a8' },

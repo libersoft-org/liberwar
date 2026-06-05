@@ -8,7 +8,7 @@ import type { UnitSlot } from '../systems/ProductionSystem.ts';
 import { t } from '../lang/lang.ts';
 import type { PixiStage } from './pixi/PixiStage.ts';
 import { TextPool } from './pixi/TextPool.ts';
-import { harvesterTexture, lightTankTexture, heavyTankTexture } from './pixi/textures.ts';
+import { unitSpriteTexture } from './pixi/entitySprites.ts';
 
 // Recyclable pool of Sprites for HUD icons that use real textures, mirroring
 // TextPool's immediate-mode pattern (begin/draw/end) since the HUD clears its
@@ -304,13 +304,10 @@ export class HUD {
 		const dk = '#1c4f80';
 		const f = (col: string): { color: string; alpha: number } => ({ color: col, alpha });
 		if (kind === 'unit') {
-			if (id === 'harvester') {
-				this.icons.draw(harvesterTexture('player'), cx, cy, s * 1.5, alpha);
-			} else if (id === 'lighttank') {
-				this.icons.draw(lightTankTexture('player'), cx, cy, s * 1.5, alpha);
-			} else if (id === 'heavytank') {
-				this.icons.draw(heavyTankTexture('player'), cx, cy, s * 1.5, alpha);
-			} else if (id === 'rifleman' || id === 'rocketeer') {
+			const tex = unitSpriteTexture(id as UnitTypeId, 'player');
+			if (tex) {
+				this.icons.draw(tex, cx, cy, s * 1.5, alpha);
+			} else if (id === 'infantry' || id === 'rocketeer') {
 				gfx.ellipse(cx, cy + 2, s / 4, s / 2.5).fill(f(blue));
 				gfx.circle(cx, cy - s / 3, s / 6).fill(f('#d8c69a'));
 				gfx

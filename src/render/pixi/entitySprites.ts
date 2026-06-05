@@ -1,10 +1,10 @@
-import { Container, Graphics, Sprite } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { FACTION_COLORS } from '../../core/config.ts';
 import { TILE } from '../../core/types.ts';
-import type { FactionPalette, TerrainKind } from '../../core/types.ts';
+import type { Faction, FactionPalette, TerrainKind, UnitTypeId } from '../../core/types.ts';
 import type { Unit } from '../../entities/Unit.ts';
 import type { Building } from '../../entities/Building.ts';
-import { harvesterTexture, lightTankTexture, heavyTankTexture } from './textures.ts';
+import { texture } from './textures.ts';
 
 // Retained PixiJS display objects mirroring the procedural shapes that the old
 // Canvas 2D `sprites.ts` drew. Geometry is built once per entity; per-frame
@@ -50,6 +50,56 @@ export interface UnitView {
 	turret: Container | null; // rotates with unit.turret (tank turret / infantry weapon)
 }
 
+// Sprite-based units: per-faction art and the display size as a multiple of
+// the unit's radius. Adding a new sprite unit is a single entry here.
+interface SpriteUnitDef {
+	art: Record<Faction, string>;
+	scale: number;
+}
+
+const SPRITE_UNITS: Partial<Record<UnitTypeId, SpriteUnitDef>> = {
+	harvester: {
+		art: {
+			player: 'sprites/units/harvester-blue.webp',
+			enemy: 'sprites/units/harvester-red.webp',
+		},
+		scale: 5,
+	},
+	lighttank: {
+		art: {
+			player: 'sprites/units/tank-light-blue.webp',
+			enemy: 'sprites/units/tank-light-red.webp',
+		},
+		scale: 3.5,
+	},
+	heavytank: {
+		art: {
+			player: 'sprites/units/tank-heavy-blue.webp',
+			enemy: 'sprites/units/tank-heavy-red.webp',
+		},
+		scale: 4,
+	},
+};
+
+function textureKey(typeId: UnitTypeId, faction: Faction): string {
+	return `${typeId}-${faction}`;
+}
+
+// Key -> url map of every sprite-unit texture, for bootstrap preloading.
+export function unitSpriteUrls(): Record<string, string> {
+	const urls: Record<string, string> = {};
+	for (const [typeId, def] of Object.entries(SPRITE_UNITS) as [UnitTypeId, SpriteUnitDef][]) {
+		urls[textureKey(typeId, 'player')] = def.art.player;
+		urls[textureKey(typeId, 'enemy')] = def.art.enemy;
+	}
+	return urls;
+}
+
+// Texture for a sprite unit, or null if the unit is drawn procedurally.
+export function unitSpriteTexture(typeId: UnitTypeId, faction: Faction): Texture | null {
+	return SPRITE_UNITS[typeId] ? texture(textureKey(typeId, faction)) : null;
+}
+
 export function buildUnitView(u: Unit): UnitView {
 	const c = FACTION_COLORS[u.faction];
 	const container = new Container();
@@ -59,51 +109,21 @@ export function buildUnitView(u: Unit): UnitView {
 	shadow.ellipse(0, u.radius * 0.5, u.radius * 1.05, u.radius * 0.5).fill({ color: '#000000', alpha: 0.28 });
 	container.addChild(shadow);
 
-	if (u.isHarvester) return { container, body: addHarvester(container, u), turret: null };
-	if (u.typeId === 'rifleman' || u.typeId === 'rocketeer') return buildInfantry(container, u, c);
-	if (u.typeId === 'lighttank') return { container, body: addLightTank(container, u), turret: null };
-	return { container, body: addHeavyTank(container, u), turret: null };
+	if (u.typeId === 'infantry' || u.typeId === 'rocketeer') return buildInfantry(container, u, c);
+	const def = SPRITE_UNITS[u.typeId];
+	if (def) return { container, body: addSpriteBody(container, texture(textureKey(u.typeId, u.faction)), u.radius * def.scale), turret: null };
+	return buildInfantry(container, u, c);
 }
 
-function addLightTank(container: Container, u: Unit): Container {
+// Builds a rotating body holding a single square sprite. The art faces left
+// (-x); rotating by PI aligns it with the unit's facing (0 = +x) before the
+// body rotates per frame.
+function addSpriteBody(container: Container, texture: Texture, size: number): Container {
 	const body = new Container();
-	const sprite = new Sprite(lightTankTexture(u.faction));
+	const sprite = new Sprite(texture);
 	sprite.anchor.set(0.5);
-	const size = u.radius * 3.4;
 	sprite.width = size;
 	sprite.height = size;
-	// Art barrel points left (-x); offset so it aligns with the unit's
-	// facing (0 = +x) before the body rotates.
-	sprite.rotation = Math.PI;
-	body.addChild(sprite);
-	container.addChild(body);
-	return body;
-}
-
-function addHeavyTank(container: Container, u: Unit): Container {
-	const body = new Container();
-	const sprite = new Sprite(heavyTankTexture(u.faction));
-	sprite.anchor.set(0.5);
-	const size = u.radius * 3.4;
-	sprite.width = size;
-	sprite.height = size;
-	// Art barrel points left (-x); offset so it aligns with the unit's
-	// facing (0 = +x) before the body rotates.
-	sprite.rotation = Math.PI;
-	body.addChild(sprite);
-	container.addChild(body);
-	return body;
-}
-
-function addHarvester(container: Container, u: Unit): Container {
-	const body = new Container();
-	const sprite = new Sprite(harvesterTexture(u.faction));
-	sprite.anchor.set(0.5);
-	const size = u.radius * 3.4;
-	sprite.width = size;
-	sprite.height = size;
-	// Art faces with the harvesting scoop pointing left (-x); offset so the
-	// scoop aligns with the unit's facing (0 = +x) before the body rotates.
 	sprite.rotation = Math.PI;
 	body.addChild(sprite);
 	container.addChild(body);
