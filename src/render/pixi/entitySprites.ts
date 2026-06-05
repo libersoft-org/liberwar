@@ -1,9 +1,10 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
 import { FACTION_COLORS } from '../../core/config.ts';
 import { TILE } from '../../core/types.ts';
 import type { FactionPalette, TerrainKind } from '../../core/types.ts';
 import type { Unit } from '../../entities/Unit.ts';
 import type { Building } from '../../entities/Building.ts';
+import { harvesterTexture, lightTankTexture, heavyTankTexture } from './textures.ts';
 
 // Retained PixiJS display objects mirroring the procedural shapes that the old
 // Canvas 2D `sprites.ts` drew. Geometry is built once per entity; per-frame
@@ -58,46 +59,55 @@ export function buildUnitView(u: Unit): UnitView {
 	shadow.ellipse(0, u.radius * 0.5, u.radius * 1.05, u.radius * 0.5).fill({ color: '#000000', alpha: 0.28 });
 	container.addChild(shadow);
 
-	if (u.isHarvester) return { container, body: addHarvester(container, u, c), turret: null };
+	if (u.isHarvester) return { container, body: addHarvester(container, u), turret: null };
 	if (u.typeId === 'rifleman' || u.typeId === 'rocketeer') return buildInfantry(container, u, c);
-	return buildTank(container, u, c);
+	if (u.typeId === 'lighttank') return { container, body: addLightTank(container, u), turret: null };
+	return { container, body: addHeavyTank(container, u), turret: null };
 }
 
-function addHarvester(container: Container, u: Unit, c: FactionPalette): Container {
-	const r = u.radius;
-	const body = new Graphics();
-	body.rect(-r, -r, r * 2, r * 2).fill('#202126');
-	body.roundRect(-r * 0.9, -r * 0.8, r * 1.8, r * 1.6, 4).fill(c.dark);
-	body.roundRect(-r * 0.5, -r * 0.7, r * 1.2, r * 1.4, 3).fill(c.primary);
-	body.rect(r * 0.7, -r * 0.6, r * 0.5, r * 1.2).fill('#3a3a40');
-	body.rect(-r * 0.3, -r * 0.5, r * 0.4, r * 0.3).fill(c.light);
+function addLightTank(container: Container, u: Unit): Container {
+	const body = new Container();
+	const sprite = new Sprite(lightTankTexture(u.faction));
+	sprite.anchor.set(0.5);
+	const size = u.radius * 3.4;
+	sprite.width = size;
+	sprite.height = size;
+	// Art barrel points left (-x); offset so it aligns with the unit's
+	// facing (0 = +x) before the body rotates.
+	sprite.rotation = Math.PI;
+	body.addChild(sprite);
 	container.addChild(body);
 	return body;
 }
 
-function buildTank(container: Container, u: Unit, c: FactionPalette): UnitView {
-	const r = u.radius;
-	const heavy = u.typeId === 'heavytank';
-
-	const body = new Graphics();
-	body
-		.rect(-r, -r * 0.95, r * 2, r * 0.45)
-		.rect(-r, r * 0.5, r * 2, r * 0.45)
-		.fill('#23252b');
-	for (let i = -r; i < r; i += 4) {
-		body.rect(i, -r * 0.95, 2, r * 0.45).rect(i, r * 0.5, 2, r * 0.45);
-	}
-	body.fill('#16171b');
-	body.roundRect(-r * 0.85, -r * 0.55, r * 1.7, r * 1.1, 3).fill(c.primary);
+function addHeavyTank(container: Container, u: Unit): Container {
+	const body = new Container();
+	const sprite = new Sprite(heavyTankTexture(u.faction));
+	sprite.anchor.set(0.5);
+	const size = u.radius * 3.4;
+	sprite.width = size;
+	sprite.height = size;
+	// Art barrel points left (-x); offset so it aligns with the unit's
+	// facing (0 = +x) before the body rotates.
+	sprite.rotation = Math.PI;
+	body.addChild(sprite);
 	container.addChild(body);
+	return body;
+}
 
-	const turret = new Graphics();
-	turret.rect(0, -2.5, r * (heavy ? 1.5 : 1.25), heavy ? 5 : 4).fill(c.dark);
-	turret.circle(0, 0, r * 0.55).fill(c.primary);
-	turret.circle(-r * 0.12, -r * 0.12, r * 0.22).fill(c.light);
-	container.addChild(turret);
-
-	return { container, body, turret };
+function addHarvester(container: Container, u: Unit): Container {
+	const body = new Container();
+	const sprite = new Sprite(harvesterTexture(u.faction));
+	sprite.anchor.set(0.5);
+	const size = u.radius * 3.4;
+	sprite.width = size;
+	sprite.height = size;
+	// Art faces with the harvesting scoop pointing left (-x); offset so the
+	// scoop aligns with the unit's facing (0 = +x) before the body rotates.
+	sprite.rotation = Math.PI;
+	body.addChild(sprite);
+	container.addChild(body);
+	return body;
 }
 
 function buildInfantry(container: Container, u: Unit, c: FactionPalette): UnitView {

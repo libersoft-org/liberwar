@@ -21,6 +21,7 @@ function buildDate(): string {
 export default defineConfig({
 	base: './',
 	root: 'src',
+	publicDir: '../public',
 	define: {
 		__COMMIT_ID__: JSON.stringify(gitCommit()),
 		__BUILD_DATE__: JSON.stringify(buildDate()),

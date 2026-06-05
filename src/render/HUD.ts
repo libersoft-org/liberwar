@@ -1,4 +1,4 @@
-import { Graphics } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { BUILD_ORDER, BUILDINGS, TRAIN_ORDER, UNITS } from '../core/config.ts';
 import { FOG_HIDDEN } from '../map/FogOfWar.ts';
 import { TILE } from '../core/types.ts';
@@ -8,6 +8,46 @@ import type { UnitSlot } from '../systems/ProductionSystem.ts';
 import { t } from '../lang/lang.ts';
 import type { PixiStage } from './pixi/PixiStage.ts';
 import { TextPool } from './pixi/TextPool.ts';
+import { harvesterTexture, lightTankTexture, heavyTankTexture } from './pixi/textures.ts';
+
+// Recyclable pool of Sprites for HUD icons that use real textures, mirroring
+// TextPool's immediate-mode pattern (begin/draw/end) since the HUD clears its
+// Graphics every frame.
+class IconPool {
+	private readonly nodes: Sprite[] = [];
+	private index = 0;
+
+	constructor(private readonly layer: Container) {}
+
+	begin(): void {
+		this.index = 0;
+	}
+
+	draw(tex: Texture, cx: number, cy: number, size: number, alpha: number): void {
+		const node = this.nodes[this.index] ?? this.create();
+		this.index++;
+		node.texture = tex;
+		node.anchor.set(0.5);
+		node.width = size;
+		node.height = size;
+		node.x = cx;
+		node.y = cy;
+		node.alpha = alpha;
+		node.visible = true;
+	}
+
+	end(): void {
+		for (let i = this.index; i < this.nodes.length; i++) this.nodes[i]!.visible = false;
+	}
+
+	private create(): Sprite {
+		const node = new Sprite();
+		this.layer.addChild(node);
+		this.nodes.push(node);
+		return node;
+	}
+}
+
 interface Btn {
 	kind: 'structure' | 'unit';
 	id: string;
@@ -36,13 +76,14 @@ export class HUD {
 	private visibleUnitsKey = '';
 	private sellBtn: Rect | null = null;
 	private homeBtn: Rect | null = null;
-
 	private readonly gfx = new Graphics();
+	private readonly icons: IconPool;
 	private readonly text: TextPool;
 
 	constructor(game: Game, stage: PixiStage) {
 		this.game = game;
 		stage.hud.addChild(this.gfx);
+		this.icons = new IconPool(stage.hud);
 		this.text = new TextPool(stage.hud);
 		this.layout();
 	}
@@ -96,6 +137,7 @@ export class HUD {
 		if (this.visibleUnitIds().join(',') !== this.visibleUnitsKey) this.layout();
 
 		const gfx = this.gfx.clear();
+		this.icons.begin();
 		this.text.begin();
 
 		gfx.rect(sx, 0, w, h).fill('#0c120c');
@@ -110,6 +152,7 @@ export class HUD {
 		this.drawHomeButton(gfx);
 		this.drawSellButton(gfx);
 
+		this.icons.end();
 		this.text.end();
 	}
 
@@ -262,9 +305,11 @@ export class HUD {
 		const f = (col: string): { color: string; alpha: number } => ({ color: col, alpha });
 		if (kind === 'unit') {
 			if (id === 'harvester') {
-				gfx.rect(cx - s / 2, cy - s / 3, s, (s * 2) / 3).fill(f(dk));
-				gfx.rect(cx - s / 3, cy - s / 4, (s * 2) / 3, s / 2).fill(f(blue));
-				gfx.rect(cx - s / 4, cy - s / 6, s / 2, s / 3).fill(f('#e0b020'));
+				this.icons.draw(harvesterTexture('player'), cx, cy, s * 1.5, alpha);
+			} else if (id === 'lighttank') {
+				this.icons.draw(lightTankTexture('player'), cx, cy, s * 1.5, alpha);
+			} else if (id === 'heavytank') {
+				this.icons.draw(heavyTankTexture('player'), cx, cy, s * 1.5, alpha);
 			} else if (id === 'rifleman' || id === 'rocketeer') {
 				gfx.ellipse(cx, cy + 2, s / 4, s / 2.5).fill(f(blue));
 				gfx.circle(cx, cy - s / 3, s / 6).fill(f('#d8c69a'));
