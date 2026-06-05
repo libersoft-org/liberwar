@@ -109,6 +109,7 @@ export const BUILDINGS: Record<BuildingTypeId, BuildingDef> = {
 		h: 3,
 		sight: 5,
 		power: -40,
+		requires: ['yard'],
 	},
 	barracks: {
 		id: 'barracks',

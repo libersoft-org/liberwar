@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { FACTION_COLORS } from '../../core/config.ts';
 import { TILE } from '../../core/types.ts';
-import type { Faction, FactionPalette, TerrainKind, UnitTypeId } from '../../core/types.ts';
+import type { BuildingTypeId, Faction, FactionPalette, TerrainKind, UnitTypeId } from '../../core/types.ts';
 import type { Unit } from '../../entities/Unit.ts';
 import type { Building } from '../../entities/Building.ts';
 import { texture } from './textures.ts';
@@ -151,6 +151,46 @@ export interface BuildingView {
 	turret: Graphics | null; // rotates with turretAngle (turret buildings)
 }
 
+// Sprite-based buildings: per-faction art that fills the building's tile box.
+// Buildings not listed here are drawn procedurally below.
+interface SpriteBuildingDef {
+	art: Record<Faction, string>;
+}
+
+const SPRITE_BUILDINGS: Partial<Record<BuildingTypeId, SpriteBuildingDef>> = {
+	yard: {
+		art: {
+			player: 'sprites/structures/yard-blue.webp',
+			enemy: 'sprites/structures/yard-red.webp',
+		},
+	},
+	power: {
+		art: {
+			player: 'sprites/structures/power-blue.webp',
+			enemy: 'sprites/structures/power-red.webp',
+		},
+	},
+};
+
+function buildingTextureKey(typeId: BuildingTypeId, faction: Faction): string {
+	return `building-${typeId}-${faction}`;
+}
+
+// Key -> url map of every sprite-building texture, for bootstrap preloading.
+export function buildingSpriteUrls(): Record<string, string> {
+	const urls: Record<string, string> = {};
+	for (const [typeId, def] of Object.entries(SPRITE_BUILDINGS) as [BuildingTypeId, SpriteBuildingDef][]) {
+		urls[buildingTextureKey(typeId, 'player')] = def.art.player;
+		urls[buildingTextureKey(typeId, 'enemy')] = def.art.enemy;
+	}
+	return urls;
+}
+
+// Texture for a sprite building, or null if the building is drawn procedurally.
+export function buildingSpriteTexture(typeId: BuildingTypeId, faction: Faction): Texture | null {
+	return SPRITE_BUILDINGS[typeId] ? texture(buildingTextureKey(typeId, faction)) : null;
+}
+
 export function buildBuildingView(b: Building): BuildingView {
 	const c = FACTION_COLORS[b.faction];
 	const w = b.def.w * TILE;
@@ -180,6 +220,15 @@ export function buildBuildingView(b: Building): BuildingView {
 }
 
 function drawBuildingBody(body: Container, b: Building, c: FactionPalette, w: number, h: number): Graphics | null {
+	const spriteDef = SPRITE_BUILDINGS[b.typeId];
+	if (spriteDef) {
+		const sprite = new Sprite(texture(buildingTextureKey(b.typeId, b.faction)));
+		sprite.width = w;
+		sprite.height = h;
+		body.addChild(sprite);
+		return null;
+	}
+
 	const base = new Graphics();
 	base.rect(4, 4, w, h).fill({ color: '#000000', alpha: 0.3 }); // shadow
 	base
@@ -189,12 +238,6 @@ function drawBuildingBody(body: Container, b: Building, c: FactionPalette, w: nu
 	body.addChild(base);
 
 	switch (b.typeId) {
-		case 'yard':
-			detailYard(base, w, h, c);
-			return null;
-		case 'power':
-			detailPower(base, w, h);
-			return null;
 		case 'refinery':
 			detailRefinery(base, w, h, c);
 			return null;
@@ -208,22 +251,6 @@ function drawBuildingBody(body: Container, b: Building, c: FactionPalette, w: nu
 			return detailTurret(body, w, h, c);
 		default:
 			return null;
-	}
-}
-
-function detailYard(g: Graphics, w: number, h: number, c: FactionPalette): void {
-	g.rect(w * 0.2, h * 0.2, w * 0.6, h * 0.6).fill(c.dark);
-	for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) g.rect(w * 0.26 + i * w * 0.2, h * 0.26 + j * h * 0.2, 5, 5);
-	g.fill('#d8d8d8');
-	g.moveTo(8, h - 8)
-		.lineTo(w - 10, 8)
-		.stroke({ width: 3, color: '#caa030' });
-}
-
-function detailPower(g: Graphics, w: number, h: number): void {
-	for (const cx of [w * 0.32, w * 0.68]) {
-		g.poly([cx - 7, h - 6, cx - 4, 8, cx + 4, 8, cx + 7, h - 6]).fill('#2a2a30');
-		g.rect(cx - 4, 6, 8, 3).fill('#4af0c0');
 	}
 }
 

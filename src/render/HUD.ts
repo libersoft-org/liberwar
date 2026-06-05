@@ -8,7 +8,7 @@ import type { UnitSlot } from '../systems/ProductionSystem.ts';
 import { t } from '../lang/lang.ts';
 import type { PixiStage } from './pixi/PixiStage.ts';
 import { TextPool } from './pixi/TextPool.ts';
-import { unitSpriteTexture } from './pixi/entitySprites.ts';
+import { unitSpriteTexture, buildingSpriteTexture } from './pixi/entitySprites.ts';
 
 // Recyclable pool of Sprites for HUD icons that use real textures, mirroring
 // TextPool's immediate-mode pattern (begin/draw/end) since the HUD clears its
@@ -306,11 +306,13 @@ export class HUD {
 		if (kind === 'unit') {
 			this.icons.draw(unitSpriteTexture(id as UnitTypeId, 'player') ?? Texture.EMPTY, cx, cy, s * 1.5, alpha);
 		} else {
+			const tex = buildingSpriteTexture(id as BuildingTypeId, 'player');
+			if (tex) {
+				this.icons.draw(tex, cx, cy, s * 1.5, alpha);
+				return;
+			}
 			gfx.rect(cx - s / 2, cy - s / 2, s, s).fill(f(blue));
-			if (id === 'power') {
-				gfx.poly([cx - s / 4, cy + s / 2, cx - s / 6, cy - s / 2, cx + s / 6, cy - s / 2, cx + s / 4, cy + s / 2]).fill(f('#2a2a30'));
-				gfx.rect(cx - s / 6, cy - s / 2, s / 3, 3).fill(f('#4af0c0'));
-			} else if (id === 'refinery') {
+			if (id === 'refinery') {
 				gfx.circle(cx + s / 5, cy, s / 4).fill(f('#b8b860'));
 				gfx.rect(cx - s / 2, cy + s / 6, s, s / 4).fill(f(dk));
 			} else if (id === 'barracks') {
@@ -322,12 +324,6 @@ export class HUD {
 			} else if (id === 'turret') {
 				gfx.circle(cx, cy, s / 2.5).fill(f(dk));
 				gfx.rect(cx, cy - 2, s / 2, 4).fill(f('#222222'));
-			} else {
-				gfx.rect(cx - s / 3, cy - s / 3, (s * 2) / 3, (s * 2) / 3).fill(f(dk));
-				gfx
-					.moveTo(cx - s / 2, cy + s / 2)
-					.lineTo(cx + s / 2, cy - s / 2)
-					.stroke({ width: 2, color: '#caa030', alpha });
 			}
 		}
 	}
