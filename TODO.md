@@ -4,6 +4,7 @@
 
 ## New Features
 
+- Make buildings raster too (units are done)
 - The units do not rotate smoothly
 - Switch main menu to Yellow font and black background
 - When clicking on harvest on map on a place that is still hidden, it should not let me to select it (i can see the amount of harvest now)
