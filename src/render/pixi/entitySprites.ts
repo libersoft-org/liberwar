@@ -65,6 +65,13 @@ const SPRITE_UNITS: Partial<Record<UnitTypeId, SpriteUnitDef>> = {
 		},
 		scale: 5,
 	},
+	infantry: {
+		art: {
+			player: 'sprites/units/infantry-blue.webp',
+			enemy: 'sprites/units/infantry-red.webp',
+		},
+		scale: 4.5,
+	},
 	lighttank: {
 		art: {
 			player: 'sprites/units/tank-light-blue.webp',
@@ -109,7 +116,7 @@ export function buildUnitView(u: Unit): UnitView {
 	shadow.ellipse(0, u.radius * 0.5, u.radius * 1.05, u.radius * 0.5).fill({ color: '#000000', alpha: 0.28 });
 	container.addChild(shadow);
 
-	if (u.typeId === 'infantry' || u.typeId === 'rocketeer') return buildInfantry(container, u, c);
+	if (u.typeId === 'rocketeer') return buildInfantry(container, u, c);
 	const def = SPRITE_UNITS[u.typeId];
 	if (def) return { container, body: addSpriteBody(container, texture(textureKey(u.typeId, u.faction)), u.radius * def.scale), turret: null };
 	return buildInfantry(container, u, c);

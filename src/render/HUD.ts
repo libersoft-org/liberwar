@@ -307,7 +307,7 @@ export class HUD {
 			const tex = unitSpriteTexture(id as UnitTypeId, 'player');
 			if (tex) {
 				this.icons.draw(tex, cx, cy, s * 1.5, alpha);
-			} else if (id === 'infantry' || id === 'rocketeer') {
+			} else if (id === 'rocketeer') {
 				gfx.ellipse(cx, cy + 2, s / 4, s / 2.5).fill(f(blue));
 				gfx.circle(cx, cy - s / 3, s / 6).fill(f('#d8c69a'));
 				gfx
