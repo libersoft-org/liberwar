@@ -36,5 +36,8 @@ export default defineConfig({
 		target: 'es2022',
 		outDir: '../build',
 		emptyOutDir: true,
+		// The bundle is dominated by pixi.js (~540 kB), which is needed up front
+		// and can't be meaningfully shrunk, so lift the warning above it.
+		chunkSizeWarningLimit: 600,
 	},
 });

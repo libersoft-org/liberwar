@@ -9,11 +9,15 @@ function resolve(path: string): string {
 	return import.meta.env.BASE_URL + path;
 }
 
-export async function preloadTextures(urls: Record<string, string>): Promise<void> {
+export async function preloadTextures(urls: Record<string, string>, onProgress?: (fraction: number) => void): Promise<void> {
 	const entries = Object.entries(urls);
+	const total = entries.length;
+	let done = 0;
 	await Promise.all(
 		entries.map(async ([key, url]: [string, string]): Promise<void> => {
 			cache.set(key, await Assets.load(resolve(url)));
+			done++;
+			if (onProgress) onProgress(total === 0 ? 1 : done / total);
 		})
 	);
 }

@@ -53,12 +53,25 @@ window.addEventListener('contextmenu', (e: MouseEvent): void => {
 });
 
 async function bootstrap(): Promise<void> {
+	const title = document.querySelector('.splash .title');
+	if (title) title.textContent = APP_NAME;
+	const fill = document.querySelector<HTMLElement>('.splash .fill');
+	const status = document.querySelector('.splash .status');
+	const setProgress = (fraction: number, label?: string): void => {
+		if (fill) fill.style.width = `${Math.round(Math.max(0.04, Math.min(1, fraction)) * 100)}%`;
+		if (label && status) status.textContent = label;
+	};
+
+	setProgress(0.05, 'Loading ...');
 	await initLang();
 	document.title = APP_NAME;
 	viewport.update();
+	setProgress(0.15, 'Starting renderer ...');
 	stage = new PixiStage();
 	await stage.init(canvas);
-	await preloadTextures({ ...unitSpriteUrls(), ...buildingSpriteUrls() });
+	setProgress(0.3, 'Loading sprites ...');
+	await preloadTextures({ ...unitSpriteUrls(), ...buildingSpriteUrls() }, (f: number): void => setProgress(0.3 + f * 0.65, 'Loading sprites ...'));
+	setProgress(1, 'Ready');
 	screens = new Screens(stage, {
 		onStart: startGame,
 		onResume: (): void => game?.setPaused(false),
@@ -68,6 +81,30 @@ async function bootstrap(): Promise<void> {
 	screens.showMenu();
 	// Re-measure text once the web font has loaded so the layout is accurate.
 	void document.fonts.ready.then((): void => screens?.resize());
+
+	// Let the bar visually reach 100% before revealing the menu behind it.
+	await barFilled(fill);
+	const splash = document.querySelector('.splash');
+	if (splash) {
+		splash.classList.add('hidden');
+		splash.addEventListener('transitionend', (): void => splash.remove(), { once: true });
+	}
+}
+
+// Resolves once the progress fill finishes its width transition (with a small
+// fallback in case the transition is skipped, e.g. width already at target).
+function barFilled(fill: HTMLElement | null): Promise<void> {
+	if (!fill) return Promise.resolve();
+	return new Promise<void>((res: () => void): void => {
+		let done = false;
+		const finish = (): void => {
+			if (done) return;
+			done = true;
+			res();
+		};
+		fill.addEventListener('transitionend', finish, { once: true });
+		window.setTimeout(finish, 450);
+	});
 }
 
 void bootstrap();

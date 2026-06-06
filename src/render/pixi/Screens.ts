@@ -6,6 +6,7 @@ import type { Locale } from '../../lang/lang.ts';
 import type { Difficulty } from '../../AI.ts';
 import type { PixiStage } from './PixiStage.ts';
 import { UIButton } from './UIButton.ts';
+import { UI } from './theme.ts';
 import { viewport } from '../../core/viewport.ts';
 
 export interface ScreenCallbacks {
@@ -114,31 +115,31 @@ export class Screens {
 
 	private dimBg(c: Container, alpha: number): void {
 		const bg = new Graphics();
-		bg.rect(0, 0, viewport.w, viewport.h).fill({ color: '#000000', alpha });
+		bg.rect(0, 0, viewport.w, viewport.h).fill({ color: UI.background, alpha });
 		bg.eventMode = 'static'; // swallow clicks so they don't reach the game canvas
 		c.addChild(bg);
 	}
 
 	private text(content: string, style: Partial<TextStyleOptions> & { fontSize: number }): Text {
-		const tx = new Text({ text: content, style: new TextStyle({ fontFamily: FONT, fill: '#cfe9d2', ...style }) });
+		const tx = new Text({ text: content, style: new TextStyle({ fontFamily: FONT, fill: UI.text, ...style }) });
 		tx.resolution = viewport.textResolution();
 		tx.roundPixels = true;
 		return tx;
 	}
 
 	private link(content: string, url: string, fontSize: number): Text {
-		const tx = this.text(content, { fontSize, fill: '#6cff7a', fontWeight: '700' });
+		const tx = this.text(content, { fontSize, fill: UI.primary, fontWeight: '700' });
 		tx.eventMode = 'static';
 		tx.cursor = 'pointer';
 		tx.on('pointertap', (): void => {
 			window.open(url, '_blank', 'noopener,noreferrer');
 		});
 		tx.on('pointerover', (): void => {
-			tx.style.fill = '#ffffff';
+			tx.style.fill = UI.white;
 			this.req();
 		});
 		tx.on('pointerout', (): void => {
-			tx.style.fill = '#6cff7a';
+			tx.style.fill = UI.primary;
 			this.req();
 		});
 		return tx;
@@ -180,24 +181,24 @@ export class Screens {
 	// menu
 	private buildMenu(): void {
 		this.clear(this.menu);
-		this.gradientBg(this.menu, '#16321a', '#060a06');
+		this.gradientBg(this.menu, UI.surface, UI.background);
 		const title = this.text(APP_NAME, {
 			fontSize: 56,
 			fontWeight: '800',
-			fill: '#6cff7a',
+			fill: UI.primary,
 			letterSpacing: 4,
-			dropShadow: { color: '#6cff7a', blur: 18, distance: 0, alpha: 0.6, angle: 0 },
+			dropShadow: { color: UI.primary, blur: 18, distance: 0, alpha: 0.6, angle: 0 },
 		});
-		const version = this.text('v' + APP_VERSION, { fontSize: 20, fontWeight: '700', fill: '#cfe9d2', letterSpacing: 2 });
+		const version = this.text('v' + APP_VERSION, { fontSize: 20, fontWeight: '700', fill: UI.text, letterSpacing: 2 });
 		version.alpha = 0.55;
-		const build = this.text(`${t('meta.buildDate')}: ${__BUILD_DATE__}\n${t('meta.commit')}: ${__COMMIT_ID__}`, { fontSize: 14, fill: '#cfe9d2', letterSpacing: 1, align: 'center' });
+		const build = this.text(`${t('meta.buildDate')}: ${__BUILD_DATE__}\n${t('meta.commit')}: ${__COMMIT_ID__}`, { fontSize: 14, fill: UI.text, letterSpacing: 1, align: 'center' });
 		build.alpha = 0.5;
 		const author = this.link(APP_AUTHOR, APP_ORGANIZATION_WEBSITE, 20);
-		const creditsTail = this.text(`, ${APP_YEAR}`, { fontSize: 20, fontWeight: '700', fill: '#cfe9d2' });
+		const creditsTail = this.text(`, ${APP_YEAR}`, { fontSize: 20, fontWeight: '700', fill: UI.text });
 		creditsTail.alpha = 0.7;
 		const credits = this.row([author, creditsTail], 0);
 		const links = this.row([this.link(t('menu.website'), APP_OFFICIAL_WEBSITE, 16), this.link(t('menu.github'), APP_GITHUB, 16)], 20);
-		const intro = this.text(t('menu.intro'), { fontSize: 16, fill: '#cfe9d2', align: 'center', wordWrap: true, wordWrapWidth: 540 });
+		const intro = this.text(t('menu.intro'), { fontSize: 16, fill: UI.text, align: 'center', wordWrap: true, wordWrapWidth: 540 });
 		intro.alpha = 0.85;
 		// difficulty selector
 		const diffButtons = DIFFICULTIES.map(
@@ -245,7 +246,7 @@ export class Screens {
 	private buildPause(): void {
 		this.clear(this.pause);
 		this.dimBg(this.pause, 0.72);
-		const title = this.text(t('pause.title'), { fontSize: 30, fontWeight: '700', fill: '#6cff7a', letterSpacing: 4 });
+		const title = this.text(t('pause.title'), { fontSize: 30, fontWeight: '700', fill: UI.primary, letterSpacing: 4 });
 		const resume = new UIButton(t('pause.resume'), { width: 240 }, (): void => this.cb.onResume(), this.req);
 		const restart = new UIButton(t('pause.restartMission'), { width: 240 }, (): void => this.cb.onRestartMission(), this.req);
 		const endMission = new UIButton(t('pause.endMission'), { width: 240 }, (): void => this.cb.onEndMission(), this.req);
@@ -269,8 +270,8 @@ export class Screens {
 		const ph = contentH + padY * 2;
 		panel
 			.roundRect(this.cx - pw / 2, (this.H - ph) / 2, pw, ph, 10)
-			.fill('#16221a')
-			.stroke({ width: 1, color: '#2f4a36' });
+			.fill(UI.surface)
+			.stroke({ width: 1, color: UI.primary });
 		this.pause.addChild(panel);
 		this.stack(this.pause, entries);
 	}
@@ -283,9 +284,9 @@ export class Screens {
 		const title = this.text(t(win ? 'end.win' : 'end.lose'), {
 			fontSize: 64,
 			fontWeight: '800',
-			fill: win ? '#6cff7a' : '#ff5a4d',
+			fill: win ? UI.primary : UI.danger,
 			letterSpacing: 6,
-			dropShadow: { color: win ? '#6cff7a' : '#ff5a4d', blur: 24, distance: 0, alpha: 0.7, angle: 0 },
+			dropShadow: { color: win ? UI.primary : UI.danger, blur: 24, distance: 0, alpha: 0.7, angle: 0 },
 		});
 		const restart = new UIButton(t('end.restart'), { fontSize: 18 }, (): void => this.cb.onStart(this.difficulty), this.req);
 		this.stack(this.end, [

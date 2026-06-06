@@ -1,4 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
+import { UI } from './theme.ts';
 import { viewport } from '../../core/viewport.ts';
 export interface ButtonOpts {
 	width?: number; // fixed width; otherwise sized from the label
@@ -72,7 +73,7 @@ export class UIButton extends Container {
 	}
 
 	private makeStyle(): TextStyle {
-		return new TextStyle({ fontFamily: 'Ubuntu, sans-serif', fontSize: this.fontSize, fill: '#cfe9d2', fontWeight: '500' });
+		return new TextStyle({ fontFamily: 'Ubuntu, sans-serif', fontSize: this.fontSize, fill: UI.text, fontWeight: '500' });
 	}
 
 	private redraw(): void {
@@ -80,9 +81,9 @@ export class UIButton extends Container {
 		this.bg
 			.clear()
 			.roundRect(0, 0, this._w, this._h, 6)
-			.fill(hot ? '#2c7a36' : '#16221a')
-			.stroke({ width: 1, color: hot ? '#6cff7a' : '#2f4a36' });
-		this.txt.style.fill = hot ? '#ffffff' : '#cfe9d2';
+			.fill(hot ? UI.primary : UI.surface)
+			.stroke({ width: 1, color: UI.primary });
+		this.txt.style.fill = hot ? UI.background : UI.text;
 		this.txt.x = this._w / 2;
 		this.txt.y = this._h / 2;
 	}
