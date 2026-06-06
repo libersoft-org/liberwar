@@ -36,8 +36,15 @@ export default defineConfig({
 		target: 'es2022',
 		outDir: '../build',
 		emptyOutDir: true,
-		// The bundle is dominated by pixi.js (~540 kB), which is needed up front
-		// and can't be meaningfully shrunk, so lift the warning above it.
-		chunkSizeWarningLimit: 600,
+		// Split pixi.js into its own vendor chunk: it rarely changes, so browsers
+		// keep it cached across game updates (only the small app chunk re-downloads).
+		rolldownOptions: {
+			output: {
+				codeSplitting: {
+					groups: [{ name: 'pixi', test: /node_modules[\\/]pixi/ }],
+				},
+			},
+		},
+		chunkSizeWarningLimit: 700,
 	},
 });
