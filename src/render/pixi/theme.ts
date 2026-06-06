@@ -3,7 +3,8 @@ export const UI = {
 	primary: '#fd3',
 	background: '#000',
 	surface: '#111',
-	text: '#cfe9d2',
+	text: '#ced',
 	white: '#fff',
-	danger: '#ff5a4d',
+	danger: '#f54',
+	success: '#6f7',
 } as const;

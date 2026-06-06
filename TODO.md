@@ -6,7 +6,7 @@
 
 - Make buildings raster too (units are done)
 - The game allows me to place a new building in black area - this should not be possible
-- The units do not rotate smoothly
+- Units do not rotate smoothly
 - When clicking on harvest on map on a place that is still hidden, it should not let me to select it (i can see the amount of harvest now)
 - I should be able to select enemy units (for a future to see what it is etc.)
 - Create an autoupload build script

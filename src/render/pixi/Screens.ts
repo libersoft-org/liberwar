@@ -284,9 +284,9 @@ export class Screens {
 		const title = this.text(t(win ? 'end.win' : 'end.lose'), {
 			fontSize: 64,
 			fontWeight: '800',
-			fill: win ? UI.primary : UI.danger,
+			fill: win ? UI.success : UI.danger,
 			letterSpacing: 6,
-			dropShadow: { color: win ? UI.primary : UI.danger, blur: 24, distance: 0, alpha: 0.7, angle: 0 },
+			dropShadow: { color: win ? UI.success : UI.danger, blur: 24, distance: 0, alpha: 0.7, angle: 0 },
 		});
 		const restart = new UIButton(t('end.restart'), { fontSize: 18 }, (): void => this.cb.onStart(this.difficulty), this.req);
 		this.stack(this.end, [
