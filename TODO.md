@@ -18,7 +18,6 @@
 - When win / loss - add option to return to the main menu
 - When paused, the "Restart mission" button generates a new level
 - Main menu (even after game ended) - Single player, Multiplayer (disabled), Settings (audio, language etc.)
-- Make forced aspect ratio to 16:9 on all screen resolutions
 - Add flags to languages
 - New structure: Radar
 - New structure: Repair pod
