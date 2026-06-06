@@ -6,7 +6,7 @@ import { unitSpriteUrls, buildingSpriteUrls } from './render/pixi/entitySprites.
 import { viewport } from './core/viewport.ts';
 import type { Difficulty } from './AI.ts';
 import { APP_NAME } from './meta.ts';
-import { initLang } from './lang/lang.ts';
+import { initLang, t } from './lang/lang.ts';
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 let game: Game | null = null;
 let stage: PixiStage | null = null;
@@ -62,16 +62,16 @@ async function bootstrap(): Promise<void> {
 		if (label && status) status.textContent = label;
 	};
 
-	setProgress(0.05, 'Loading ...');
+	setProgress(0.05);
 	await initLang();
 	document.title = APP_NAME;
 	viewport.update();
-	setProgress(0.15, 'Starting renderer ...');
+	setProgress(0.15, t('loading.renderer'));
 	stage = new PixiStage();
 	await stage.init(canvas);
-	setProgress(0.3, 'Loading sprites ...');
-	await preloadTextures({ ...unitSpriteUrls(), ...buildingSpriteUrls() }, (f: number): void => setProgress(0.3 + f * 0.65, 'Loading sprites ...'));
-	setProgress(1, 'Ready');
+	setProgress(0.3, t('loading.sprites'));
+	await preloadTextures({ ...unitSpriteUrls(), ...buildingSpriteUrls() }, (f: number): void => setProgress(0.3 + f * 0.65, t('loading.sprites')));
+	setProgress(1, t('loading.ready'));
 	screens = new Screens(stage, {
 		onStart: startGame,
 		onResume: (): void => game?.setPaused(false),

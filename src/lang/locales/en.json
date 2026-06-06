@@ -11,6 +11,12 @@
 			"hard": "Hard"
 		}
 	},
+	"loading": {
+		"loading": "Loading ...",
+		"renderer": "Starting renderer ...",
+		"sprites": "Loading sprites ...",
+		"ready": "Ready"
+	},
 	"meta": {
 		"buildDate": "Build date",
 		"commit": "Commit"

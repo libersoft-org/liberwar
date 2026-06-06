@@ -11,6 +11,12 @@
 			"hard": "Těžká"
 		}
 	},
+	"loading": {
+		"loading": "Načítání ...",
+		"renderer": "Spouštění vykreslování ...",
+		"sprites": "Načítání spritů ...",
+		"ready": "Hotovo"
+	},
 	"meta": {
 		"buildDate": "Datum sestavení",
 		"commit": "Revize"
