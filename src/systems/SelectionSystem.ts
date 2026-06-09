@@ -115,9 +115,12 @@ export class SelectionSystem {
 			}
 			return;
 		}
-		const enemyU = this.unitAt(world);
-		const enemyB = enemyU ? null : this.buildingAt(world);
-		const target = (enemyU && enemyU.faction === 'enemy' ? enemyU : null) ?? (enemyB && enemyB.faction === 'enemy' ? enemyB : null);
+		// A unit under the cursor only takes priority as an attack target; the
+		// building must still be looked up so clicks aren't swallowed by own
+		// units standing on it (attack / refinery-unload would fall through to move).
+		const clickedU = this.unitAt(world);
+		const clickedB = this.buildingAt(world);
+		const target = (clickedU && clickedU.faction === 'enemy' ? clickedU : null) ?? (clickedB && clickedB.faction === 'enemy' ? clickedB : null);
 
 		if (target) {
 			for (const u of this.selectedUnits) u.orderAttack(target, this.host);
@@ -127,8 +130,8 @@ export class SelectionSystem {
 
 		// harvester + own refinery? send harvesters to unload there.
 		const harvestersSel = this.selectedUnits.filter((u: Unit): boolean => u.isHarvester);
-		if (enemyB && enemyB.faction === 'player' && enemyB.typeId === 'refinery' && harvestersSel.length > 0) {
-			for (const h of harvestersSel) h.orderUnload(this.host, enemyB);
+		if (clickedB && clickedB.faction === 'player' && clickedB.typeId === 'refinery' && harvestersSel.length > 0) {
+			for (const h of harvestersSel) h.orderUnload(this.host, clickedB);
 			this.host.audio.play('move');
 			const others = this.selectedUnits.filter((u: Unit): boolean => !u.isHarvester);
 			this.issueMove(others, world);
