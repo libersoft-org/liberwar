@@ -157,9 +157,12 @@ export class Unit extends GameObject {
 			const rangePx = (this.def.weapon?.range ?? 0) * TILE + t.radius;
 			this.turret = angleTo(this.pos, t.pos);
 			if (d <= rangePx) {
-				// in range: stop and fire
+				// in range: stop, face the target and fire. Units are single
+				// sprites rendered by `facing`, so turn the body, not just the
+				// (never rendered) turret angle.
 				this.path = [];
 				this.pathTarget = null;
+				this.facing = this.turret;
 				if (this.cooldown <= 0) this.fire(t, world);
 			} else if (this.order === 'attack' || this.order === 'attackMove') {
 				// chase
