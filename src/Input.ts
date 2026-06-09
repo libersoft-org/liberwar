@@ -18,6 +18,7 @@ export class InputController {
 	private boundKeyUp: (e: KeyboardEvent) => void;
 	private boundContext: (e: Event) => void;
 	private boundWheel: (e: WheelEvent) => void;
+	private boundBlur: () => void;
 
 	constructor(game: Game) {
 		this.game = game;
@@ -30,6 +31,8 @@ export class InputController {
 		};
 		this.boundContext = (e: Event): void => e.preventDefault();
 		this.boundWheel = (e: WheelEvent): void => this.onWheel(e);
+		// keyup never arrives for keys held across alt-tab; forget them on blur
+		this.boundBlur = (): void => this.keys.clear();
 	}
 
 	attach(): void {
@@ -41,6 +44,7 @@ export class InputController {
 		window.addEventListener('keyup', this.boundKeyUp);
 		c.addEventListener('contextmenu', this.boundContext);
 		c.addEventListener('wheel', this.boundWheel, { passive: false });
+		window.addEventListener('blur', this.boundBlur);
 	}
 
 	detach(): void {
@@ -52,6 +56,8 @@ export class InputController {
 		window.removeEventListener('keyup', this.boundKeyUp);
 		c.removeEventListener('contextmenu', this.boundContext);
 		c.removeEventListener('wheel', this.boundWheel);
+		window.removeEventListener('blur', this.boundBlur);
+		this.keys.clear();
 	}
 
 	private inSidebar(x: number): boolean {
