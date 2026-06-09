@@ -144,10 +144,6 @@ function addSpriteBody(container: Container, texture: Texture, size: number): Co
 
 export interface BuildingView {
 	container: Container;
-	body: Container; // full building art (masked while under construction)
-	mask: Graphics; // reveal mask for build progress
-	scaffold: Graphics; // shown only while incomplete
-	shade: Graphics; // dark backing shown while incomplete
 	turret: Graphics | null; // rotates with turretAngle (turret buildings)
 }
 
@@ -199,24 +195,11 @@ export function buildBuildingView(b: Building): BuildingView {
 	container.x = b.tile.x * TILE;
 	container.y = b.tile.y * TILE;
 
-	const shade = new Graphics();
-	shade.rect(0, 0, w, h).fill({ color: '#141414', alpha: 0.5 });
-	container.addChild(shade);
-
 	const body = new Container();
 	const turret = drawBuildingBody(body, b, c, w, h);
 	container.addChild(body);
 
-	const mask = new Graphics();
-	mask.rect(0, 0, w, h).fill('#ffffff');
-	container.addChild(mask);
-
-	const scaffold = new Graphics();
-	for (let i = 0; i < w; i += 8) scaffold.moveTo(i, 0).lineTo(i, h);
-	scaffold.stroke({ width: 1, color: 'rgb(255,210,80)', alpha: 0.5 });
-	container.addChild(scaffold);
-
-	return { container, body, mask, scaffold, shade, turret };
+	return { container, turret };
 }
 
 function drawBuildingBody(body: Container, b: Building, c: FactionPalette, w: number, h: number): Graphics | null {

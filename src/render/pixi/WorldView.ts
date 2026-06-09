@@ -122,23 +122,6 @@ export class WorldView {
 			view.container.visible = !g.fog.hidesBuilding(b.faction, b.tile);
 			if (!view.container.visible) continue;
 
-			const w = b.def.w * TILE;
-			const h = b.def.h * TILE;
-			if (b.complete) {
-				view.body.mask = null;
-				view.shade.visible = false;
-				view.scaffold.visible = false;
-				view.mask.visible = false;
-			} else {
-				view.body.mask = view.mask;
-				view.mask.visible = true;
-				view.shade.visible = true;
-				view.scaffold.visible = true;
-				view.mask
-					.clear()
-					.rect(0, h * (1 - b.buildProgress), w, h * b.buildProgress)
-					.fill('#ffffff');
-			}
 			if (view.turret) view.turret.rotation = b.turretAngle;
 		}
 		for (const [b, view] of this.buildingViews) {
@@ -266,7 +249,7 @@ export class WorldView {
 			if (g.fog.hidesBuilding(b.faction, b.tile)) continue;
 			const sel = g.selectedBuilding === b;
 			const w = b.def.w * TILE;
-			if (sel || b.hp < b.maxHp || !b.complete) {
+			if (sel || b.hp < b.maxHp) {
 				this.healthBarWide(gfx, b.pos.x, b.tile.y * TILE - 2, w - 6, b.hp / b.maxHp, b.faction === 'player');
 			}
 			if (sel) {

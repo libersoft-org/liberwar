@@ -26,7 +26,7 @@ export interface ProductionHost {
 	hasBuilding(faction: Faction, type: BuildingTypeId): boolean;
 	buildings: Building[];
 	spawnUnit(type: UnitTypeId, faction: Faction, pos: Vec2): Unit;
-	placeBuilding(type: BuildingTypeId, faction: Faction, tile: Vec2, instant: boolean): Building;
+	placeBuilding(type: BuildingTypeId, faction: Faction, tile: Vec2): Building;
 	findSpawnNear(b: Building): Vec2;
 	canPlayerPlace(tx: number, ty: number, w: number, h: number, type?: BuildingTypeId): boolean;
 	notify(text: string): void;
@@ -113,7 +113,7 @@ export class ProductionSystem {
 		if (!this.pendingPlacement || !this.structureSlot?.ready) return;
 		const def = BUILDINGS[this.pendingPlacement];
 		if (this.host.canPlayerPlace(tile.x, tile.y, def.w, def.h, this.pendingPlacement)) {
-			this.host.placeBuilding(this.pendingPlacement, 'player', tile, false);
+			this.host.placeBuilding(this.pendingPlacement, 'player', tile);
 			this.host.audio.play('build');
 			this.pendingPlacement = null;
 			this.structureSlot = null;
@@ -164,7 +164,7 @@ export class ProductionSystem {
 
 	private completeUnit(type: UnitTypeId): void {
 		const def = UNITS[type];
-		const from = this.host.buildings.find((b: Building): boolean => b.faction === 'player' && b.typeId === def.from && b.complete && !b.dead);
+		const from = this.host.buildings.find((b: Building): boolean => b.faction === 'player' && b.typeId === def.from && !b.dead);
 		if (!from) {
 			this.host.economy.addCredits('player', def.cost); // refund if building lost
 			return;

@@ -127,7 +127,7 @@ export class SelectionSystem {
 
 		// harvester + own refinery? send harvesters to unload there.
 		const harvestersSel = this.selectedUnits.filter((u: Unit): boolean => u.isHarvester);
-		if (enemyB && enemyB.faction === 'player' && enemyB.typeId === 'refinery' && enemyB.complete && harvestersSel.length > 0) {
+		if (enemyB && enemyB.faction === 'player' && enemyB.typeId === 'refinery' && harvestersSel.length > 0) {
 			for (const h of harvestersSel) h.orderUnload(this.host, enemyB);
 			this.host.audio.play('move');
 			const others = this.selectedUnits.filter((u: Unit): boolean => !u.isHarvester);

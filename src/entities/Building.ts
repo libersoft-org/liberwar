@@ -13,14 +13,12 @@ export class Building extends GameObject {
 	def: BuildingDef;
 	// top-left tile of footprint
 	tile: Vec2;
-	// 0..1 construction progress; 1 = complete
-	buildProgress: number;
 	cooldown = 0;
 	turretAngle = 0;
 	// rally point for produced units
 	rally: Vec2 | null = null;
 
-	constructor(typeId: BuildingTypeId, faction: Faction, tile: Vec2, instant: boolean = false) {
+	constructor(typeId: BuildingTypeId, faction: Faction, tile: Vec2) {
 		const def = BUILDINGS[typeId];
 		const pos = {
 			x: tile.x * TILE + (def.w * TILE) / 2,
@@ -31,11 +29,6 @@ export class Building extends GameObject {
 		this.typeId = typeId;
 		this.def = def;
 		this.tile = { ...tile };
-		this.buildProgress = instant ? 1 : 0;
-	}
-
-	get complete(): boolean {
-		return this.buildProgress >= 1;
 	}
 
 	// Refund when sold: half the purchase price, scaled by current health.
@@ -43,12 +36,7 @@ export class Building extends GameObject {
 		return Math.floor((this.def.cost * 0.5 * this.hp) / this.maxHp);
 	}
 
-	// Returns true once a turret with a weapon fires (used for sound).
 	update(dt: number, world: World): void {
-		if (!this.complete) {
-			this.buildProgress = Math.min(1, this.buildProgress + dt / Math.max(0.1, this.def.buildTime));
-			return;
-		}
 		if (this.cooldown > 0) this.cooldown -= dt;
 
 		// Armed structures (e.g. turret) auto-fire at the nearest enemy.

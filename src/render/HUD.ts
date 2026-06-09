@@ -220,7 +220,7 @@ export class HUD {
 		const rect = this.sellBtn;
 		if (!rect) return;
 		const b = this.game.selectedBuilding;
-		if (!b || b.faction !== 'player' || !b.complete) {
+		if (!b || b.faction !== 'player') {
 			this.drawActionButton(gfx, rect, { fill: '#241616', stroke: '#5a3a36', labelColor: '#7a5a55', label: t('hud.sell'), valueColor: '#7a5a55', value: '' });
 			return;
 		}
@@ -343,7 +343,7 @@ export class HUD {
 
 		const sb = this.sellBtn;
 		const sbBuilding = g.selectedBuilding;
-		if (sb && sbBuilding && sbBuilding.faction === 'player' && sbBuilding.complete && x >= sb.x && x <= sb.x + sb.w && y >= sb.y && y <= sb.y + sb.h) {
+		if (sb && sbBuilding && sbBuilding.faction === 'player' && x >= sb.x && x <= sb.x + sb.w && y >= sb.y && y <= sb.y + sb.h) {
 			if (button === 0) g.sellSelectedBuilding();
 			return;
 		}

@@ -28,6 +28,8 @@ export class EnemyAI {
 	private attackTimer = 12;
 	private army: Unit[] = [];
 	private planIndex = 0;
+	// structure being produced; placed into the map once timeLeft runs out
+	private buildSlot: { type: BuildingTypeId; timeLeft: number } | null = null;
 
 	constructor(game: Game, difficulty: Difficulty) {
 		this.game = game;
@@ -39,6 +41,11 @@ export class EnemyAI {
 		this.attackTimer -= dt;
 		// passive income trickle so the AI keeps functioning even if harvesters die
 		this.game.addCredits('enemy', 12 * this.p.income * dt);
+		if (this.buildSlot) {
+			// low power slows construction, same as the player's production slot
+			this.buildSlot.timeLeft -= dt * this.game.economy.buildSpeed('enemy');
+			if (this.buildSlot.timeLeft <= 0) this.placeFinishedBuilding();
+		}
 
 		if (this.timer <= 0) {
 			this.timer = this.p.thinkInterval;
@@ -71,18 +78,16 @@ export class EnemyAI {
 			return;
 		}
 
-		// Follow the build plan for structures.
-		if (this.planIndex < BUILD_PLAN.length) {
+		// Follow the build plan for structures: pay and wait out the build time
+		// (like the player's production slot), then place the finished building.
+		if (this.planIndex < BUILD_PLAN.length && !this.buildSlot) {
 			const next = BUILD_PLAN[this.planIndex]!;
 			const def = BUILDINGS[next];
 			const reqMet = !def.requires || def.requires.every((r: BuildingTypeId): boolean => this.has(r));
-			if (reqMet && credits >= def.cost) {
-				if (this.placeEnemyBuilding(next, yard)) {
-					this.planIndex++;
-					return;
-				}
-			} else if (!reqMet) {
-				// skip ahead is not allowed; wait for requirement
+			if (reqMet && credits >= def.cost && this.game.spend('enemy', def.cost)) {
+				this.buildSlot = { type: next, timeLeft: def.buildTime };
+				this.planIndex++;
+				return;
 			}
 		}
 
@@ -106,7 +111,7 @@ export class EnemyAI {
 
 	private trainEnemy(type: UnitTypeId): void {
 		const def = UNITS[type];
-		const from = this.myBuildings().find((b: Building): boolean => b.typeId === def.from && b.complete);
+		const from = this.myBuildings().find((b: Building): boolean => b.typeId === def.from);
 		if (!from) return;
 		if (!this.game.spend('enemy', def.cost)) return;
 		const spawn = this.game.findSpawnNear(from);
@@ -115,14 +120,26 @@ export class EnemyAI {
 		else this.army.push(u);
 	}
 
-	private placeEnemyBuilding(type: BuildingTypeId, yard: Building): boolean {
-		const def = BUILDINGS[type];
+	// Places the finished structure near the yard; retries later if blocked.
+	private placeFinishedBuilding(): void {
+		const slot = this.buildSlot;
+		if (!slot) return;
+		const def = BUILDINGS[slot.type];
+		const yard = this.myBuildings().find((b: Building): boolean => b.typeId === 'yard');
+		if (!yard) {
+			// yard lost; refund and drop the order
+			this.game.addCredits('enemy', def.cost);
+			this.buildSlot = null;
+			return;
+		}
 		// search a free footprint spiralling out from the yard
 		const spot = spiralSearch(yard.tile.x, yard.tile.y, (tx: number, ty: number): boolean => this.game.canPlaceBuilding(tx, ty, def.w, def.h), { minR: 2, maxR: 14, steps: 16 });
-		if (!spot) return false;
-		if (!this.game.spend('enemy', def.cost)) return false;
-		this.game.placeBuilding(type, 'enemy', spot, false);
-		return true;
+		if (!spot) {
+			slot.timeLeft = this.p.thinkInterval;
+			return;
+		}
+		this.game.placeBuilding(slot.type, 'enemy', spot);
+		this.buildSlot = null;
 	}
 
 	private manageArmy(): void {

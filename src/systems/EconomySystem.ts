@@ -46,7 +46,6 @@ export class EconomySystem {
 		let produced = 0;
 		let consumed = 0;
 		for (const b of this.query.buildingsOf(faction)) {
-			if (!b.complete) continue;
 			if (b.def.power > 0) produced += b.def.power;
 			else consumed += -b.def.power;
 		}

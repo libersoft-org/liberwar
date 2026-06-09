@@ -163,11 +163,11 @@ export class Game implements World {
 	}
 
 	private createStartBase(faction: Faction, spot: Vec2): void {
-		const yard = this.placeBuilding('yard', faction, spot, true);
-		this.placeBuilding('power', faction, { x: spot.x + 3, y: spot.y }, true);
+		const yard = this.placeBuilding('yard', faction, spot);
+		this.placeBuilding('power', faction, { x: spot.x + 3, y: spot.y });
 		// refinery placed adjacent if room, else near
 		const refSpot = this.placement.canPlaceBuilding(spot.x, spot.y + 3, 3, 3) ? { x: spot.x, y: spot.y + 3 } : this.placement.findFreeSpotNear(yard, 3, 3);
-		this.placeBuilding('refinery', faction, refSpot, true);
+		this.placeBuilding('refinery', faction, refSpot);
 		// starting harvester
 		const h = this.spawnUnit('harvester', faction, this.findSpawnNear(yard));
 		h.orderHarvest(this);
@@ -180,8 +180,8 @@ export class Game implements World {
 		return u;
 	}
 
-	placeBuilding(type: BuildingTypeId, faction: Faction, tile: Vec2, instant: boolean): Building {
-		const b = new Building(type, faction, tile, instant);
+	placeBuilding(type: BuildingTypeId, faction: Faction, tile: Vec2): Building {
+		const b = new Building(type, faction, tile);
 		this.setFootprint(b, true);
 		this.buildings.push(b);
 		if (faction === 'enemy') this.audio.play('build');
@@ -280,7 +280,7 @@ export class Game implements World {
 	// uniformly by the removal pipeline based on the 'sold' cause.
 	sellSelectedBuilding(): void {
 		const b = this.selection.selectedBuilding;
-		if (!b || b.faction !== 'player' || b.dead || !b.complete) return;
+		if (!b || b.faction !== 'player' || b.dead) return;
 		this.economy.addCredits('player', b.sellValue);
 		b.remove('sold');
 		this.selection.clearSelection();
