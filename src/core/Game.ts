@@ -184,7 +184,8 @@ export class Game implements World {
 		const b = new Building(type, faction, tile);
 		this.setFootprint(b, true);
 		this.buildings.push(b);
-		if (faction === 'enemy') this.audio.play('build');
+		// enemy construction is only audible when the player can see the spot
+		if (faction === 'enemy' && this.fog.isVisibleWorld(b.pos)) this.audio.play('build');
 		return b;
 	}
 
