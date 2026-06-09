@@ -205,7 +205,13 @@ export class HUD {
 			gfx.rect(mm.x + u.pos.x * scale, mm.y + u.pos.y * scale, 2, 2).fill(u.faction === 'player' ? '#3da5ff' : '#ff5a4d');
 		}
 		const cam = g.camera;
-		gfx.rect(mm.x + cam.x * scale, mm.y + cam.y * scale, cam.viewW * scale, cam.viewH * scale).stroke({ width: 1, color: 'rgba(255,255,255,0.8)' });
+		// clamp the camera rectangle to the minimap frame; on wide windows the
+		// logical view can exceed the world bounds and the rect would overflow
+		const camX = Math.max(mm.x, mm.x + cam.x * scale);
+		const camY = Math.max(mm.y, mm.y + cam.y * scale);
+		const camR = Math.min(mm.x + mm.size, mm.x + (cam.x + cam.viewW) * scale);
+		const camB = Math.min(mm.y + mm.size, mm.y + (cam.y + cam.viewH) * scale);
+		gfx.rect(camX, camY, camR - camX, camB - camY).stroke({ width: 1, color: 'rgba(255,255,255,0.8)' });
 		gfx.rect(mm.x - 0.5, mm.y - 0.5, mm.size + 1, mm.size + 1).stroke({ width: 1, color: '#2f4a36' });
 	}
 
