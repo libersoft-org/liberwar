@@ -209,8 +209,8 @@ export class HUD {
 		// logical view can exceed the world bounds and the rect would overflow
 		const camX = Math.max(mm.x, mm.x + cam.x * scale);
 		const camY = Math.max(mm.y, mm.y + cam.y * scale);
-		const camR = Math.min(mm.x + mm.size, mm.x + (cam.x + cam.viewW) * scale);
-		const camB = Math.min(mm.y + mm.size, mm.y + (cam.y + cam.viewH) * scale);
+		const camR = Math.min(mm.x + mm.size, mm.x + (cam.x + cam.worldViewW) * scale);
+		const camB = Math.min(mm.y + mm.size, mm.y + (cam.y + cam.worldViewH) * scale);
 		gfx.rect(camX, camY, camR - camX, camB - camY).stroke({ width: 1, color: 'rgba(255,255,255,0.8)' });
 		gfx.rect(mm.x - 0.5, mm.y - 0.5, mm.size + 1, mm.size + 1).stroke({ width: 1, color: '#2f4a36' });
 	}

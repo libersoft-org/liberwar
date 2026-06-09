@@ -59,13 +59,14 @@ export class WorldView {
 		const g = this.game;
 		const cam = g.camera;
 		const shake = g.shakeOffset;
-		this.stage.world.x = -cam.x + shake.x;
-		this.stage.world.y = -cam.y + shake.y;
+		this.stage.world.scale.set(cam.zoom);
+		this.stage.world.x = -cam.x * cam.zoom + shake.x;
+		this.stage.world.y = -cam.y * cam.zoom + shake.y;
 
 		const x0 = Math.max(0, Math.floor(cam.x / TILE));
 		const y0 = Math.max(0, Math.floor(cam.y / TILE));
-		const x1 = Math.min(g.mapTiles.w - 1, Math.ceil((cam.x + g.viewW) / TILE));
-		const y1 = Math.min(g.mapTiles.h - 1, Math.ceil((cam.y + g.viewH) / TILE));
+		const x1 = Math.min(g.mapTiles.w - 1, Math.ceil((cam.x + cam.worldViewW) / TILE));
+		const y1 = Math.min(g.mapTiles.h - 1, Math.ceil((cam.y + cam.worldViewH) / TILE));
 
 		this.renderHarvest(x0, y0, x1, y1);
 		this.syncBuildings();
@@ -330,10 +331,10 @@ export class WorldView {
 				const tx = Math.floor(world.x / TILE);
 				const ty = Math.floor(world.y / TILE);
 				const ok = g.canPlayerPlace(tx, ty, def.w, def.h, g.pendingPlacement);
-				const sx = tx * TILE - g.camera.x;
-				const sy = ty * TILE - g.camera.y;
-				gfx.rect(sx, sy, def.w * TILE, def.h * TILE).fill({ color: ok ? 'rgb(90,255,120)' : 'rgb(255,80,70)', alpha: ok ? 0.25 : 0.3 });
-				gfx.rect(sx, sy, def.w * TILE, def.h * TILE).stroke({ width: 2, color: ok ? 'rgb(90,255,120)' : 'rgb(255,80,70)' });
+				const s = g.camera.worldToScreen({ x: tx * TILE, y: ty * TILE });
+				const z = g.camera.zoom;
+				gfx.rect(s.x, s.y, def.w * TILE * z, def.h * TILE * z).fill({ color: ok ? 'rgb(90,255,120)' : 'rgb(255,80,70)', alpha: ok ? 0.25 : 0.3 });
+				gfx.rect(s.x, s.y, def.w * TILE * z, def.h * TILE * z).stroke({ width: 2, color: ok ? 'rgb(90,255,120)' : 'rgb(255,80,70)' });
 			}
 		}
 	}

@@ -119,6 +119,11 @@ export class InputController {
 
 	private onWheel(e: WheelEvent): void {
 		e.preventDefault();
+		if (this.game.paused) return;
+		const p = this.localPoint(e);
+		if (this.inSidebar(p.x)) return;
+		// zoom toward the cursor; ~1.13x per wheel notch
+		this.game.camera.zoomBy(Math.exp(-e.deltaY * 0.0012), p);
 	}
 
 	// keyboard
@@ -131,6 +136,13 @@ export class InputController {
 				break;
 			case 'h':
 				this.game.homeView();
+				break;
+			case '+':
+			case '=':
+				this.game.camera.zoomBy(1.2);
+				break;
+			case '-':
+				this.game.camera.zoomBy(1 / 1.2);
 				break;
 		}
 	}
@@ -147,7 +159,8 @@ export class InputController {
 	// per-frame camera scroll
 	update(dt: number): void {
 		const cam = this.game.camera;
-		const speed = 600 * dt;
+		// constant on-screen speed regardless of zoom
+		const speed = (600 * dt) / cam.zoom;
 		let dx = 0;
 		let dy = 0;
 		if (this.keys.has('arrowleft') || this.keys.has('a')) dx -= speed;
