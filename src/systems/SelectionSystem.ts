@@ -39,7 +39,11 @@ export class SelectionSystem {
 			// single click: pick topmost entity under cursor
 			const u = this.unitAt({ x: minX, y: minY });
 			if (u && u.faction === 'player') {
-				this.selectedUnits = [u];
+				// shift+click adds to the selection, or removes an already selected unit
+				if (!additive) this.selectedUnits = [u];
+				else if (this.selectedUnits.includes(u)) this.selectedUnits = this.selectedUnits.filter((s: Unit): boolean => s !== u);
+				else this.selectedUnits.push(u);
+				this.selectedBuilding = null;
 				this.host.audio.play('select');
 				return;
 			}
