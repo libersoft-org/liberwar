@@ -31,6 +31,8 @@ export class Unit extends GameObject {
 	// orders
 	order: UnitOrderKind = 'idle';
 	moveGoal: Vec2 | null = null;
+	// original attack-move destination; moveGoal gets overwritten while chasing targets
+	attackMoveGoal: Vec2 | null = null;
 	attackTarget: Entity | null = null;
 	cooldown = 0;
 	repathTimer = 0;
@@ -57,12 +59,14 @@ export class Unit extends GameObject {
 	orderMove(goal: Vec2, world: World): void {
 		this.order = 'move';
 		this.attackTarget = null;
+		this.attackMoveGoal = null;
 		this.setDestination(goal, world);
 	}
 
 	orderAttackMove(goal: Vec2, world: World): void {
 		this.order = 'attackMove';
 		this.attackTarget = null;
+		this.attackMoveGoal = { ...goal };
 		this.setDestination(goal, world);
 	}
 
@@ -99,6 +103,7 @@ export class Unit extends GameObject {
 		this.path = [];
 		this.pathTarget = null;
 		this.moveGoal = null;
+		this.attackMoveGoal = null;
 		this.vel = { x: 0, y: 0 };
 	}
 
@@ -137,6 +142,7 @@ export class Unit extends GameObject {
 					this.stop();
 				}
 			} else if (this.order === 'idle' || this.order === 'attackMove') {
+				if (this.attackTarget?.dead) this.attackTarget = null;
 				const enemy = world.findNearestEnemy(this.faction, this.pos, this.def.sight);
 				if (enemy) {
 					this.attackTarget = enemy;
@@ -160,6 +166,14 @@ export class Unit extends GameObject {
 				if (this.repathTimer <= 0 || this.path.length === 0) this.setDestination(t.pos, world);
 			}
 			void dt;
+		} else if (this.order === 'attackMove' && this.attackMoveGoal) {
+			// no target in sight: resume advancing toward the attack-move goal
+			if (dist(this.attackMoveGoal, this.pos) <= TILE) this.stop();
+			else if (this.path.length === 0 && this.repathTimer <= 0) {
+				this.setDestination(this.attackMoveGoal, world);
+				// goal unreachable: give up instead of retrying forever
+				if (this.path.length === 0) this.stop();
+			}
 		}
 	}
 
