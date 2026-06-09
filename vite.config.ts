@@ -9,11 +9,11 @@ function gitCommit(): string {
 	}
 }
 
-/** Build timestamp formatted as `YYYY-DD-MM HH:MM:SS UTC`. */
+/** Build timestamp formatted as `YYYY-MM-DD HH:MM:SS UTC`. */
 function buildDate(): string {
 	const d = new Date();
 	const p = (n: number): string => String(n).padStart(2, '0');
-	const date = `${d.getUTCFullYear()}-${p(d.getUTCDate())}-${p(d.getUTCMonth() + 1)}`;
+	const date = `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
 	const time = `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`;
 	return `${date} ${time} UTC`;
 }
