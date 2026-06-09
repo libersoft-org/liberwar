@@ -43,6 +43,9 @@ export class Unit extends GameObject {
 	harvestTile: Vec2 | null = null;
 	homeRefinery: Building | null = null;
 	unloadTimer = 0;
+	// cooldown between harvest-target scans; avoids a full-map scan every frame
+	// when nothing is left to harvest
+	harvestSearchTimer = 0;
 
 	constructor(typeId: UnitTypeId, faction: Faction, pos: Vec2) {
 		const def = UNITS[typeId];
@@ -85,6 +88,7 @@ export class Unit extends GameObject {
 		this.attackTarget = null;
 		this.harvestState = 'seek';
 		this.harvestTile = tile ?? null;
+		this.harvestSearchTimer = 0;
 		if (tile) this.setDestination(tileCenter(tile.x, tile.y), world);
 	}
 
@@ -121,6 +125,7 @@ export class Unit extends GameObject {
 	update(dt: number, world: World): void {
 		if (this.cooldown > 0) this.cooldown -= dt;
 		if (this.repathTimer > 0) this.repathTimer -= dt;
+		if (this.harvestSearchTimer > 0) this.harvestSearchTimer -= dt;
 
 		if (this.isHarvester) {
 			// Only harvest autonomously when explicitly ordered to; a manual move
@@ -192,12 +197,20 @@ export class Unit extends GameObject {
 		switch (this.harvestState) {
 			case 'seek': {
 				if (!this.harvestTile || world.map.harvestAt(this.harvestTile.x, this.harvestTile.y) <= 5) {
+					// current target is gone; wait out the scan cooldown before
+					// searching again (scans are expensive on a depleted map)
+					if (this.harvestSearchTimer > 0) {
+						this.path = [];
+						return;
+					}
 					const found = world.map.findHarvest(this.pos, 34);
 					if (found) {
 						this.harvestTile = found;
 						this.setDestination(tileCenter(found.x, found.y), world);
 					} else {
-						// nothing to harvest; idle in place
+						// nothing worth harvesting; idle and retry in a while
+						this.harvestTile = null;
+						this.harvestSearchTimer = 2;
 						this.path = [];
 						return;
 					}

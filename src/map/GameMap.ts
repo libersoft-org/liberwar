@@ -207,14 +207,15 @@ export class GameMap {
 		return this.richestHarvest();
 	}
 
-	// Finds the tile with the most remaining harvest on the whole map.
+	// Finds the tile with the most remaining harvest on the whole map. Honours
+	// the same worth threshold as findHarvest so depleted scraps are never picked.
 	private richestHarvest(): Vec2 | null {
 		let best: Vec2 | null = null;
 		let bestValue = 0;
 		for (let y = 0; y < MAP_H; y++) {
 			for (let x = 0; x < MAP_W; x++) {
 				const value = this.harvest[y]![x]!;
-				if (value > bestValue && this.passable(x, y)) {
+				if (value > bestValue && value >= HARVEST_MIN_WORTH && this.passable(x, y)) {
 					bestValue = value;
 					best = { x, y };
 				}
