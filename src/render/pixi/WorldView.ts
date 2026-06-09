@@ -12,6 +12,8 @@ import { TextPool } from './TextPool.ts';
 import { buildBuildingView, buildUnitView, drawTerrainTile } from './entitySprites.ts';
 import type { BuildingView, UnitView } from './entitySprites.ts';
 const SELECT = 'rgb(120,255,140)';
+const PLACE_OK = 'rgb(90,255,120)';
+const PLACE_BAD = 'rgb(255,80,70)';
 
 /**
  * Retained PixiJS rendering of the game world. Long-lived entities (terrain,
@@ -333,8 +335,9 @@ export class WorldView {
 				const ok = g.canPlayerPlace(tx, ty, def.w, def.h, g.pendingPlacement);
 				const s = g.camera.worldToScreen({ x: tx * TILE, y: ty * TILE });
 				const z = g.camera.zoom;
-				gfx.rect(s.x, s.y, def.w * TILE * z, def.h * TILE * z).fill({ color: ok ? 'rgb(90,255,120)' : 'rgb(255,80,70)', alpha: ok ? 0.25 : 0.3 });
-				gfx.rect(s.x, s.y, def.w * TILE * z, def.h * TILE * z).stroke({ width: 2, color: ok ? 'rgb(90,255,120)' : 'rgb(255,80,70)' });
+				const c = ok ? PLACE_OK : PLACE_BAD;
+				gfx.rect(s.x, s.y, def.w * TILE * z, def.h * TILE * z).fill({ color: c, alpha: ok ? 0.25 : 0.3 });
+				gfx.rect(s.x, s.y, def.w * TILE * z, def.h * TILE * z).stroke({ width: 2, color: c });
 			}
 		}
 	}

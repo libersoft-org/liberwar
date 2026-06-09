@@ -5,6 +5,7 @@
 ## New Features
 
 - Make buildings raster too (units are done)
+- When something is selectable, use a different cursor
 - The game allows me to place a new building in black area - this should not be possible
 - Units do not rotate smoothly
 - When clicking on harvest on map on a place that is still hidden, it should not let me to select it (i can see the amount of harvest now)
