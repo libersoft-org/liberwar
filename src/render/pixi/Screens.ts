@@ -1,4 +1,4 @@
-import { Container, FillGradient, Graphics, Text, TextStyle } from 'pixi.js';
+import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import type { TextStyleOptions } from 'pixi.js';
 import { APP_AUTHOR, APP_GITHUB, APP_NAME, APP_OFFICIAL_WEBSITE, APP_ORGANIZATION_WEBSITE, APP_VERSION, APP_YEAR } from '../../meta.ts';
 import { getLocale, LOCALE_LABELS, setLocale, SUPPORTED_LOCALES, t } from '../../lang/lang.ts';
@@ -98,18 +98,9 @@ export class Screens {
 		c.removeChildren().forEach((child): void => child.destroy({ children: true }));
 	}
 
-	private gradientBg(c: Container, top: string, bottom: string): void {
+	private solidBg(c: Container): void {
 		const bg = new Graphics();
-		const w = viewport.w;
-		const h = viewport.h;
-		try {
-			const grad = new FillGradient(0, 0, 0, h);
-			grad.addColorStop(0, top);
-			grad.addColorStop(1, bottom);
-			bg.rect(0, 0, w, h).fill(grad);
-		} catch {
-			bg.rect(0, 0, w, h).fill(bottom);
-		}
+		bg.rect(0, 0, viewport.w, viewport.h).fill(UI.background);
 		c.addChild(bg);
 	}
 
@@ -181,7 +172,7 @@ export class Screens {
 	// menu
 	private buildMenu(): void {
 		this.clear(this.menu);
-		this.gradientBg(this.menu, UI.surface, UI.background);
+		this.solidBg(this.menu);
 		const title = this.text(APP_NAME, {
 			fontSize: 56,
 			fontWeight: '800',
