@@ -30,6 +30,9 @@ export class EnemyAI {
 	private planIndex = 0;
 	// structure being produced; placed into the map once timeLeft runs out
 	private buildSlot: { type: BuildingTypeId; timeLeft: number } | null = null;
+	// unit being trained; spawns once timeLeft runs out (the AI pays the same
+	// build time as the player instead of spawning units instantly)
+	private trainSlot: { type: UnitTypeId; timeLeft: number } | null = null;
 
 	constructor(game: Game, difficulty: Difficulty) {
 		this.game = game;
@@ -45,6 +48,10 @@ export class EnemyAI {
 			// low power slows construction, same as the player's production slot
 			this.buildSlot.timeLeft -= dt * this.game.economy.buildSpeed('enemy');
 			if (this.buildSlot.timeLeft <= 0) this.placeFinishedBuilding();
+		}
+		if (this.trainSlot) {
+			this.trainSlot.timeLeft -= dt * this.game.economy.buildSpeed('enemy');
+			if (this.trainSlot.timeLeft <= 0) this.completeTraining();
 		}
 
 		if (this.timer <= 0) {
@@ -73,7 +80,7 @@ export class EnemyAI {
 
 		// Keep enough harvesters.
 		const harvesters = this.myUnits().filter((u: Unit): boolean => u.isHarvester).length;
-		if (this.has('refinery') && this.has('factory') && harvesters < 2 && credits >= UNITS.harvester.cost) {
+		if (this.has('refinery') && this.has('factory') && harvesters < 2 && !this.trainSlot && credits >= UNITS.harvester.cost) {
 			this.trainEnemy('harvester');
 			return;
 		}
@@ -91,8 +98,8 @@ export class EnemyAI {
 			}
 		}
 
-		// Train combat units with spare cash.
-		if (credits > 500) {
+		// Train combat units with spare cash (one at a time, like the player's queue head).
+		if (credits > 500 && !this.trainSlot) {
 			const roster: UnitTypeId[] = [];
 			if (this.has('barracks')) {
 				roster.push('infantry');
@@ -109,13 +116,29 @@ export class EnemyAI {
 		}
 	}
 
+	// Pays for the unit and starts the training timer; the unit spawns in
+	// completeTraining once the build time elapses.
 	private trainEnemy(type: UnitTypeId): void {
+		if (this.trainSlot) return;
 		const def = UNITS[type];
-		const from = this.myBuildings().find((b: Building): boolean => b.typeId === def.from);
-		if (!from) return;
+		if (!this.myBuildings().some((b: Building): boolean => b.typeId === def.from)) return;
 		if (!this.game.spend('enemy', def.cost)) return;
+		this.trainSlot = { type, timeLeft: def.buildTime };
+	}
+
+	private completeTraining(): void {
+		const slot = this.trainSlot;
+		if (!slot) return;
+		this.trainSlot = null;
+		const def = UNITS[slot.type];
+		const from = this.myBuildings().find((b: Building): boolean => b.typeId === def.from);
+		if (!from) {
+			// production building lost mid-training: refund, same as the player
+			this.game.addCredits('enemy', def.cost);
+			return;
+		}
 		const spawn = this.game.findSpawnNear(from);
-		const u = this.game.spawnUnit(type, 'enemy', spawn);
+		const u = this.game.spawnUnit(slot.type, 'enemy', spawn);
 		if (u.isHarvester) u.orderHarvest(this.game);
 		else this.army.push(u);
 	}
