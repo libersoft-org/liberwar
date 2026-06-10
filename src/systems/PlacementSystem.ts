@@ -2,7 +2,7 @@ import { spiralSearch } from '../math/geometry.ts';
 import { tileCenter } from '../map/GameMap.ts';
 import { TILE } from '../core/types.ts';
 import { dist } from '../math/vec.ts';
-import { FOG_VISIBLE } from '../map/FogOfWar.ts';
+import { FOG_HIDDEN, FOG_VISIBLE } from '../map/FogOfWar.ts';
 import type { FogOfWar } from '../map/FogOfWar.ts';
 import type { GameMap } from '../map/GameMap.ts';
 import type { BuildingTypeId, Vec2 } from '../core/types.ts';
@@ -40,6 +40,10 @@ export class PlacementSystem {
 	// placed on any currently visible tile (within active sight, not just
 	// previously explored fog).
 	canPlayerPlace(tx: number, ty: number, w: number, h: number, type?: BuildingTypeId): boolean {
+		// The whole footprint must sit on explored ground. Building into pitch-black
+		// fog is not allowed, and because hidden tiles are uniformly unbuildable the
+		// red ghost can't leak enemy buildings concealed in them via the blocked map.
+		for (let y = ty; y < ty + h; y++) for (let x = tx; x < tx + w; x++) if (this.fog.state(x, y) === FOG_HIDDEN) return false;
 		if (!this.canPlaceBuilding(tx, ty, w, h)) return false;
 		const playerBuildings = this.buildings().filter((b: Building): boolean => b.faction === 'player' && !b.dead);
 		if (type === 'yard' && playerBuildings.length === 0) {

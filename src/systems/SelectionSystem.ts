@@ -103,6 +103,9 @@ export class SelectionSystem {
 	buildingAt(p: Vec2): Building | null {
 		for (const b of this.host.buildings) {
 			if (b.dead) continue;
+			// an enemy building concealed by fog must not exist for the player:
+			// no blind selection (the select sound would leak it) and no attack order
+			if (this.host.fog.hidesBuilding(b.faction, b.tile)) continue;
 			const x0 = b.tile.x * TILE;
 			const y0 = b.tile.y * TILE;
 			if (p.x >= x0 && p.x <= x0 + b.def.w * TILE && p.y >= y0 && p.y <= y0 + b.def.h * TILE) return b;
@@ -124,7 +127,9 @@ export class SelectionSystem {
 		// units standing on it (attack / refinery-unload would fall through to move).
 		const clickedU = this.unitAt(world);
 		const clickedB = this.buildingAt(world);
-		const target = (clickedU && clickedU.faction === 'enemy' ? clickedU : null) ?? (clickedB && clickedB.faction === 'enemy' ? clickedB : null);
+		// fog-hidden enemy units are not valid targets either (no blind attacks)
+		const targetU = clickedU && clickedU.faction === 'enemy' && !this.host.fog.hidesUnit(clickedU.faction, clickedU.pos) ? clickedU : null;
+		const target = targetU ?? (clickedB && clickedB.faction === 'enemy' ? clickedB : null);
 
 		if (target) {
 			for (const u of this.selectedUnits) u.orderAttack(target, this.host);
