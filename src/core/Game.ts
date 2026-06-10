@@ -335,6 +335,7 @@ export class Game implements World {
 			last = now;
 			dt = Math.min(dt, 0.05);
 			this.update(dt);
+			this.input.updateCursor(); // outside update(): must also run while paused
 			this.toast.update(dt);
 			this.render();
 			requestAnimationFrame(frame);

@@ -1,8 +1,12 @@
 import { worldToTile } from './map/GameMap.ts';
 import { TILE } from './core/types.ts';
 import { viewport } from './core/viewport.ts';
+import { FOG_HIDDEN } from './map/FogOfWar.ts';
+import { cursors } from './render/cursors.ts';
+import type { CursorKind } from './render/cursors.ts';
 import type { Vec2 } from './core/types.ts';
 import type { Game } from './core/Game.ts';
+import type { Unit } from './entities/Unit.ts';
 
 export class InputController {
 	private game: Game;
@@ -14,6 +18,8 @@ export class InputController {
 	selecting = false;
 	selStart: Vec2 = { x: 0, y: 0 };
 	selEnd: Vec2 = { x: 0, y: 0 };
+	// last cursor applied to the canvas; avoids touching the DOM every frame
+	private lastCursor: CursorKind | null = null;
 	private boundDown: (e: MouseEvent) => void;
 	private boundUp: (e: MouseEvent) => void;
 	private boundMove: (e: MouseEvent) => void;
@@ -61,6 +67,7 @@ export class InputController {
 		c.removeEventListener('wheel', this.boundWheel);
 		window.removeEventListener('blur', this.boundBlur);
 		this.keys.clear();
+		this.applyCursor('arrow'); // leave no combat cursor behind for the menus
 	}
 
 	private inSidebar(x: number): boolean {
@@ -190,5 +197,42 @@ export class InputController {
 		}
 		if (dx !== 0 || dy !== 0) cam.move(dx, dy);
 		void TILE;
+	}
+
+	// Context-sensitive mouse cursor. Runs every frame (also while paused, so a
+	// stale crosshair never survives into the pause overlay or game-over screen).
+	updateCursor(): void {
+		this.applyCursor(this.pickCursor());
+	}
+
+	// 'arrow' = plain game pointer; 'select' = something selectable under the
+	// cursor; 'attack' = attackable enemy while own combat units are selected.
+	private pickCursor(): CursorKind {
+		const g = this.game;
+		if (!this.mouseSeen || g.paused || g.gameOver) return 'arrow';
+		const m = this.mouse;
+		// sidebar, placement ghost and drag-select keep the plain arrow
+		if (this.inSidebar(m.x) || g.pendingPlacement || this.selecting) return 'arrow';
+		const w = this.screenToWorld(m);
+		const u = g.unitAt(w);
+		const b = g.buildingAt(w);
+		// attack cursor only when the selection can actually shoot, and never
+		// over enemies still hidden by fog (no information leak)
+		if (this.game.selectedUnits.some((s: Unit): boolean => !!s.def.weapon)) {
+			const enemyU = u && u.faction === 'enemy' && !g.fog.hidesUnit(u.faction, u.pos);
+			const enemyB = b && b.faction === 'enemy' && !g.fog.hidesBuilding(b.faction, b.tile);
+			if (enemyU || enemyB) return 'attack';
+		}
+		if ((u && u.faction === 'player') || (b && b.faction === 'player')) return 'select';
+		// harvest fields are selectable too (they show their remaining amount)
+		const tile = worldToTile(w);
+		if (g.map.harvestAt(tile.x, tile.y) > 5 && g.fog.state(tile.x, tile.y) !== FOG_HIDDEN) return 'select';
+		return 'arrow';
+	}
+
+	private applyCursor(cursor: CursorKind): void {
+		if (cursor === this.lastCursor) return;
+		this.lastCursor = cursor;
+		this.game.canvas.style.cursor = cursors[cursor];
 	}
 }

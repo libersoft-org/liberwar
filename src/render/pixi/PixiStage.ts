@@ -1,5 +1,6 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { viewport } from '../../core/viewport.ts';
+import { cursors } from '../cursors.ts';
 
 /**
  * Owns the PixiJS {@link Application} and the top-level container hierarchy.
@@ -44,6 +45,13 @@ export class PixiStage {
 		this.world.mask = this.worldMask;
 		// We drive rendering manually from the Game loop.
 		this.app.ticker.stop();
+		// Custom game cursors: the canvas baseline is the game arrow, and
+		// Pixi-interactive UI (cursor = 'pointer') resolves to the gold variant
+		// through the event system's style map.
+		const styles = this.app.renderer.events.cursorStyles;
+		styles['default'] = cursors.arrow;
+		styles['pointer'] = cursors.pointer;
+		canvas.style.cursor = cursors.arrow;
 		this.initialized = true;
 	}
 

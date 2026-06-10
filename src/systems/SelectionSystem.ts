@@ -1,7 +1,9 @@
 import { worldToTile } from '../map/GameMap.ts';
 import { TILE } from '../core/types.ts';
 import { dist } from '../math/vec.ts';
+import { FOG_HIDDEN } from '../map/FogOfWar.ts';
 import type { AudioEngine } from '../audio/AudioEngine.ts';
+import type { FogOfWar } from '../map/FogOfWar.ts';
 import type { GameMap } from '../map/GameMap.ts';
 import type { Vec2 } from '../core/types.ts';
 import type { World } from '../core/world.ts';
@@ -13,6 +15,7 @@ export interface SelectionHost {
 	units: Unit[];
 	buildings: Building[];
 	map: GameMap;
+	fog: FogOfWar;
 	audio: AudioEngine;
 }
 
@@ -54,9 +57,10 @@ export class SelectionSystem {
 				this.host.audio.play('select');
 				return;
 			}
-			// a harvest tile shows its remaining amount
+			// a harvest tile shows its remaining amount; tiles never seen stay
+			// unselectable so the fog doesn't leak how much is out there
 			const tile = worldToTile({ x: minX, y: minY });
-			if (this.host.map.harvestAt(tile.x, tile.y) > 5) {
+			if (this.host.map.harvestAt(tile.x, tile.y) > 5 && this.host.fog.state(tile.x, tile.y) !== FOG_HIDDEN) {
 				this.selectedHarvestTile = tile;
 				this.host.audio.play('select');
 			}
