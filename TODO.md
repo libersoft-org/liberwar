@@ -5,6 +5,7 @@
 ## New Features
 
 - Enemy building is selectable too, but there is no cursor (should be the same cursor as for our buildings)
+- Enemy units are not selectable and there is no cursor (except if I am attacking with my units on them), there should be cursor and I should be able to see their healthpoints if I select them
 - Make buildings raster too (units are done)
 - The game allows me to place a new building in black area - this should not be possible
 - Units do not rotate smoothly
