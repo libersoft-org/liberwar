@@ -1,3 +1,4 @@
+import { AudioEngine } from './audio/AudioEngine.ts';
 import { Game } from './core/Game.ts';
 import { PixiStage } from './render/pixi/PixiStage.ts';
 import { Screens } from './render/pixi/Screens.ts';
@@ -8,6 +9,9 @@ import type { Difficulty } from './AI.ts';
 import { APP_NAME } from './meta.ts';
 import { initLang, t } from './lang/lang.ts';
 const canvas = document.getElementById('game') as HTMLCanvasElement;
+// One engine for the whole app: its lazily created AudioContext is reused by
+// every match (browsers cap the number of live AudioContexts).
+const audio = new AudioEngine();
 let game: Game | null = null;
 let stage: PixiStage | null = null;
 let screens: Screens | null = null;
@@ -33,7 +37,7 @@ function startGame(difficulty: Difficulty): void {
 	lastDifficulty = difficulty;
 	if (game) game.stop();
 	screens?.hideAll();
-	game = new Game(stage, difficulty, onEnd, returnToMenu, onPauseChange);
+	game = new Game(stage, audio, difficulty, onEnd, returnToMenu, onPauseChange);
 	game.hud.layout();
 	game.start();
 }

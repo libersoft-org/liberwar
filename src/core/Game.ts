@@ -1,4 +1,4 @@
-import { AudioEngine } from '../audio/AudioEngine.ts';
+import type { AudioEngine } from '../audio/AudioEngine.ts';
 import { Camera } from '../render/Camera.ts';
 import { FACTION_COLORS, HARVESTER_CAPACITY } from './config.ts';
 import { GameMap } from '../map/GameMap.ts';
@@ -68,17 +68,19 @@ export class Game implements World {
 	private screenShake = 0;
 	readonly sidebarW = 252;
 
-	constructor(stage: PixiStage, difficulty: Difficulty, onEnd: (result: 'win' | 'lose') => void, onQuit: () => void, onPauseChange: (paused: boolean) => void) {
+	constructor(stage: PixiStage, audio: AudioEngine, difficulty: Difficulty, onEnd: (result: 'win' | 'lose') => void, onQuit: () => void, onPauseChange: (paused: boolean) => void) {
 		this.stage = stage;
 		this.canvas = stage.canvas;
 		stage.reset();
+		// Shared across matches (like the stage): the browser limits concurrent
+		// AudioContexts, so the engine must never be re-created per match.
+		this.audio = audio;
 		this.onEnd = onEnd;
 		this.onQuit = onQuit;
 		this.onPauseChange = onPauseChange;
 		this.rngState = (Math.random() * 0xffffffff) >>> 0;
 		const seed = (Math.random() * 0xffffffff) >>> 0;
 		this.map = new GameMap(seed);
-		this.audio = new AudioEngine();
 
 		this.query = new EntityQuery(
 			(): Unit[] => this.units,
