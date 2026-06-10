@@ -4,6 +4,7 @@
 
 ## New Features
 
+- What happens if I create 2 same buildings? (faster build time etc?)
 - Enemy building is selectable too, but there is no cursor (should be the same cursor as for our buildings)
 - Enemy units are not selectable and there is no cursor (except if I am attacking with my units on them), there should be cursor and I should be able to see their healthpoints if I select them
 - Make buildings raster too (units are done)

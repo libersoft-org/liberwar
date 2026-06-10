@@ -1,6 +1,7 @@
-import { Application, Container, Graphics } from 'pixi.js';
+import { Application, Container, Graphics, Rectangle } from 'pixi.js';
 import { viewport } from '../../core/viewport.ts';
 import { cursors } from '../cursors.ts';
+import type { CursorKind } from '../cursors.ts';
 
 /**
  * Owns the PixiJS {@link Application} and the top-level container hierarchy.
@@ -45,14 +46,36 @@ export class PixiStage {
 		this.world.mask = this.worldMask;
 		// We drive rendering manually from the Game loop.
 		this.app.ticker.stop();
-		// Custom game cursors: the canvas baseline is the game arrow, and
-		// Pixi-interactive UI (cursor = 'pointer') resolves to the gold variant
-		// through the event system's style map.
-		const styles = this.app.renderer.events.cursorStyles;
-		styles['default'] = cursors.arrow;
-		styles['pointer'] = cursors.pointer;
-		canvas.style.cursor = cursors.arrow;
+		// Custom game cursors. The event system is the single owner of the
+		// canvas cursor style (it caches the current mode, so writing to
+		// canvas.style directly would desync it). The stage itself is the
+		// interactive backdrop carrying the context cursor picked by the game
+		// (see setCursor); UI buttons (cursor = 'pointer') override it with the
+		// gold variant through regular hit testing.
+		const events = this.app.renderer.events;
+		for (const kind of Object.keys(cursors) as CursorKind[]) events.cursorStyles[kind] = cursors[kind];
+		events.cursorStyles['default'] = cursors.arrow;
+		this.app.stage.eventMode = 'static';
+		this.app.stage.hitArea = new Rectangle(0, 0, 1 << 24, 1 << 24);
+		this.app.stage.cursor = 'arrow';
+		events.setCursor('arrow');
 		this.initialized = true;
+	}
+
+	/**
+	 * Sets the in-game context cursor (arrow / select / attack ...). Applied via
+	 * the stage so Pixi's cursor cache stays consistent; interactive UI on top
+	 * still wins with its own pointer cursor.
+	 */
+	setCursor(kind: CursorKind): void {
+		const prev = this.app.stage.cursor;
+		if (prev === kind) return;
+		this.app.stage.cursor = kind;
+		// Re-resolve right away instead of waiting for the next mousemove, but
+		// only while the pointer rests on the backdrop itself — anything Pixi
+		// last resolved to a different cursor (a hovered UI button) keeps it.
+		const events = this.app.renderer.events;
+		if (events.rootBoundary.cursor === prev) events.setCursor(kind);
 	}
 
 	get canvas(): HTMLCanvasElement {
