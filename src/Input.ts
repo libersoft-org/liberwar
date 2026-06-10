@@ -116,6 +116,12 @@ export class InputController {
 	}
 
 	private onUp(e: MouseEvent): void {
+		// Pausing mid-drag cancels the selection box; releasing the button while
+		// the pause overlay is up must not select anything underneath it.
+		if (this.game.paused) {
+			this.selecting = false;
+			return;
+		}
 		if (e.button === 0 && this.selecting) {
 			this.selecting = false;
 			const a = this.screenToWorld(this.selStart);
@@ -144,10 +150,12 @@ export class InputController {
 	private onKeyDown(e: KeyboardEvent): void {
 		const k = e.key.toLowerCase();
 		this.keys.add(k);
+		if (k === 'escape') {
+			this.onEscape();
+			return;
+		}
+		if (this.game.paused) return; // only Escape works under the pause overlay
 		switch (k) {
-			case 'escape':
-				this.onEscape();
-				break;
 			case 'h':
 				this.game.homeView();
 				break;
