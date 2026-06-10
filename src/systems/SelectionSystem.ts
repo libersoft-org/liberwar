@@ -153,7 +153,8 @@ export class SelectionSystem {
 		const harvesters = this.selectedUnits.filter((u: Unit): boolean => u.isHarvester);
 		if (harvest > 5 && harvesters.length > 0) {
 			for (const h of harvesters) h.orderHarvest(this.host, tile);
-			this.host.audio.play('move');
+			// distinct low ack for a harvest order (instead of the generic move blip)
+			this.host.audio.play('harvest');
 			const others = this.selectedUnits.filter((u: Unit): boolean => !u.isHarvester);
 			this.issueMove(others, world);
 			return;

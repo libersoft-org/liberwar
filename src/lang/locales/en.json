@@ -1,7 +1,6 @@
 {
 	"menu": {
 		"intro": "Real-time strategic game",
-		"language": "Language",
 		"start": "START GAME",
 		"website": "Official website",
 		"github": "GitHub",
@@ -12,7 +11,6 @@
 		}
 	},
 	"loading": {
-		"loading": "Loading ...",
 		"renderer": "Starting renderer ...",
 		"sprites": "Loading sprites ...",
 		"ready": "Ready"

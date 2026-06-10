@@ -1,7 +1,6 @@
 {
 	"menu": {
 		"intro": "Real-time strategická hra",
-		"language": "Jazyk",
 		"start": "SPUSTIT HRU",
 		"website": "Oficiální web",
 		"github": "GitHub",
@@ -12,7 +11,6 @@
 		}
 	},
 	"loading": {
-		"loading": "Načítání ...",
 		"renderer": "Spouštění vykreslování ...",
 		"sprites": "Načítání spritů ...",
 		"ready": "Hotovo"
