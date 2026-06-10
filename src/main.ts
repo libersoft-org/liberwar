@@ -40,6 +40,8 @@ function startGame(difficulty: Difficulty): void {
 	game = new Game(stage, audio, difficulty, onEnd, returnToMenu, onPauseChange);
 	game.hud.layout();
 	game.start();
+	// Debug handle for the browser console / automated testing (dev builds only).
+	if (import.meta.env.DEV) Object.assign(globalThis, { __lw: { stage, game } });
 }
 
 window.addEventListener('resize', (): void => {

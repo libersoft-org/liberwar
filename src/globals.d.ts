@@ -3,5 +3,5 @@ declare const __COMMIT_ID__: string;
 declare const __BUILD_DATE__: string;
 
 interface ImportMeta {
-	readonly env: { readonly BASE_URL: string };
+	readonly env: { readonly BASE_URL: string; readonly DEV: boolean };
 }
