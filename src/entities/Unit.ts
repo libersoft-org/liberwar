@@ -325,6 +325,17 @@ export class Unit extends GameObject {
 	// steering
 	private moveAlongPath(dt: number, world: World): void {
 		if (this.path.length === 0) {
+			// A move order with no path can never finish on its own (plain moves
+			// are never repathed): the goal was unreachable or already met. Flip
+			// to idle so auto-engage in updateCombat works again.
+			if (this.order === 'move') {
+				this.order = 'idle';
+				this.moveGoal = null;
+				if (this.resumeHarvestOnArrival) {
+					this.resumeHarvestOnArrival = false;
+					this.orderHarvest(world);
+				}
+			}
 			this.vel.x *= 0.6;
 			this.vel.y *= 0.6;
 			return;
