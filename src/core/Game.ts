@@ -79,7 +79,8 @@ export class Game implements World {
 		this.onEnd = onEnd;
 		this.onQuit = onQuit;
 		this.onPauseChange = onPauseChange;
-		this.rngState = (Math.random() * 0xffffffff) >>> 0;
+		// xorshift never escapes a zero state; force at least 1
+		this.rngState = (Math.random() * 0xffffffff) >>> 0 || 1;
 		const seed = (Math.random() * 0xffffffff) >>> 0;
 		this.map = new GameMap(seed);
 
