@@ -188,7 +188,8 @@ export class HUD {
 				if (s === FOG_HIDDEN) continue;
 				const kind = g.map.terrain[ty]![tx]!;
 				let col: string;
-				if (g.map.harvest[ty]![tx]! > 5) col = '#caa028';
+				// harvestAt (not the raw array) so tiles under buildings don't show yellow
+				if (g.map.harvestAt(tx, ty) > 5) col = '#caa028';
 				else col = kind === 'water' ? '#1e406a' : kind === 'rock' ? '#56565c' : kind === 'dirt' ? '#68543a' : '#3a5c2e';
 				const px = mm.x + tx * TILE * scale;
 				const py = mm.y + ty * TILE * scale;

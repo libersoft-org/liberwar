@@ -36,6 +36,9 @@ export class Unit extends GameObject {
 	attackTarget: Entity | null = null;
 	cooldown = 0;
 	repathTimer = 0;
+	// Set while walking out from under a freshly placed building; a harvester
+	// re-issues its harvest order when the walk completes.
+	private resumeHarvestOnArrival = false;
 
 	// harvester state
 	harvestLoad = 0;
@@ -102,6 +105,19 @@ export class Unit extends GameObject {
 		this.setDestination(refinery.pos, world);
 	}
 
+	// Forced relocation after a building was placed on this unit's tile. Walks
+	// straight to `goal`, bypassing A* (it cannot route from a blocked start
+	// tile); a harvester resumes its harvest order once it arrives.
+	evictTo(goal: Vec2): void {
+		const resumeHarvest = this.isHarvester && this.order === 'harvest';
+		this.stop();
+		this.order = 'move';
+		this.moveGoal = { ...goal };
+		this.pathTarget = { ...goal };
+		this.path = [{ ...goal }];
+		this.resumeHarvestOnArrival = resumeHarvest;
+	}
+
 	stop(): void {
 		this.order = 'idle';
 		this.path = [];
@@ -109,9 +125,11 @@ export class Unit extends GameObject {
 		this.moveGoal = null;
 		this.attackMoveGoal = null;
 		this.vel = { x: 0, y: 0 };
+		this.resumeHarvestOnArrival = false;
 	}
 
 	private setDestination(goal: Vec2, world: World): void {
+		this.resumeHarvestOnArrival = false;
 		this.moveGoal = { ...goal };
 		const start = worldToTile(this.pos);
 		const end = worldToTile(goal);
@@ -320,6 +338,10 @@ export class Unit extends GameObject {
 			this.path.shift();
 			if (this.path.length === 0) {
 				if (this.order === 'move') this.order = 'idle';
+				if (this.resumeHarvestOnArrival) {
+					this.resumeHarvestOnArrival = false;
+					this.orderHarvest(world);
+				}
 			}
 			return;
 		}
@@ -351,14 +373,19 @@ export class Unit extends GameObject {
 
 		let nx = this.pos.x + this.vel.x * dt;
 		let ny = this.pos.y + this.vel.y * dt;
-		// block against impassable terrain
+		// Block against impassable terrain and building footprints. When the
+		// unit's own tile is already blocked (a building was just placed on top
+		// of it), footprints are ignored so the unit can walk out.
+		const cur = worldToTile(this.pos);
+		const onBlocked = !world.map.passable(cur.x, cur.y);
+		const free = (px: number, py: number): boolean => (onBlocked ? world.map.passableTerrain(px, py) : world.map.passable(px, py));
 		const tt = worldToTile({ x: nx, y: ny });
-		if (!world.map.passableTerrain(tt.x, tt.y)) {
+		if (!free(tt.x, tt.y)) {
 			// try axis-separated movement
 			const tx = worldToTile({ x: nx, y: this.pos.y });
 			const ty = worldToTile({ x: this.pos.x, y: ny });
-			if (world.map.passableTerrain(tx.x, tx.y)) ny = this.pos.y;
-			else if (world.map.passableTerrain(ty.x, ty.y)) nx = this.pos.x;
+			if (free(tx.x, tx.y)) ny = this.pos.y;
+			else if (free(ty.x, ty.y)) nx = this.pos.x;
 			else {
 				nx = this.pos.x;
 				ny = this.pos.y;

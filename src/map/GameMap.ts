@@ -162,8 +162,11 @@ export class GameMap {
 		this.blocked[this.idx(tx, ty)] = v ? 1 : 0;
 	}
 
+	// Harvest under a building footprint is inaccessible (and reads as 0) until
+	// the building is removed; the stored value stays frozen meanwhile.
 	harvestAt(tx: number, ty: number): number {
 		if (!this.inBounds(tx, ty)) return 0;
+		if (this.blocked[this.idx(tx, ty)]) return 0;
 		return this.harvest[ty]![tx]!;
 	}
 
@@ -176,6 +179,7 @@ export class GameMap {
 	// Removes up to `amount` harvest from a tile, returns actually removed value.
 	takeHarvest(tx: number, ty: number, amount: number): number {
 		if (!this.inBounds(tx, ty)) return 0;
+		if (this.blocked[this.idx(tx, ty)]) return 0; // can't mine through a building
 		const have = this.harvest[ty]![tx]!;
 		const taken = Math.min(have, amount);
 		this.harvest[ty]![tx] = have - taken;

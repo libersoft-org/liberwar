@@ -1,8 +1,9 @@
 import type { AudioEngine } from '../audio/AudioEngine.ts';
 import { Camera } from '../render/Camera.ts';
 import { FACTION_COLORS, HARVESTER_CAPACITY } from './config.ts';
-import { GameMap } from '../map/GameMap.ts';
+import { GameMap, tileCenter, worldToTile } from '../map/GameMap.ts';
 import { FogOfWar } from '../map/FogOfWar.ts';
+import { spiralSearch } from '../math/geometry.ts';
 import { Effect, Projectile } from '../entities/Projectile.ts';
 import { Building } from '../entities/Building.ts';
 import { Unit } from '../entities/Unit.ts';
@@ -186,9 +187,22 @@ export class Game implements World {
 		const b = new Building(type, faction, tile);
 		this.setFootprint(b, true);
 		this.buildings.push(b);
+		this.evictUnitsUnder(b);
 		// enemy construction is only audible when the player can see the spot
 		if (faction === 'enemy' && this.fog.isVisibleWorld(b.pos)) this.audio.play('build');
 		return b;
+	}
+
+	// Units caught under a freshly placed building's footprint walk out to the
+	// nearest free tile instead of being stuck inside (see Unit.evictTo).
+	private evictUnitsUnder(b: Building): void {
+		for (const u of this.units) {
+			if (u.dead) continue;
+			const t = worldToTile(u.pos);
+			if (t.x < b.tile.x || t.x >= b.tile.x + b.def.w || t.y < b.tile.y || t.y >= b.tile.y + b.def.h) continue;
+			const free = spiralSearch(t.x, t.y, (tx: number, ty: number): boolean => this.map.passable(tx, ty), { maxR: 10 });
+			if (free) u.evictTo(tileCenter(free.x, free.y));
+		}
 	}
 
 	// Marks (or clears) every map tile under a building's footprint as blocked.
