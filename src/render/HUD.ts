@@ -340,10 +340,17 @@ export class HUD {
 		const g = this.game;
 		const mm = this.minimap;
 		if (x >= mm.x && x <= mm.x + mm.size && y >= mm.y && y <= mm.y + mm.size) {
+			// right click mirrors the world: cancel placement first, otherwise
+			// issue a command (unit move/attack or building rally via commandAt)
+			if (button === 2 && g.pendingPlacement) {
+				g.pendingPlacement = null;
+				return;
+			}
 			const scale = mm.size / (g.mapTiles.w * TILE);
 			const wx = (x - mm.x) / scale;
 			const wy = (y - mm.y) / scale;
-			if (button === 2 && g.selectedUnits.length > 0) g.commandAt({ x: wx, y: wy });
+			const hasCommandTarget = g.selectedUnits.length > 0 || (g.selectedBuilding && g.selectedBuilding.faction === 'player');
+			if (button === 2 && hasCommandTarget) g.commandAt({ x: wx, y: wy });
 			else g.camera.centerOn({ x: wx, y: wy });
 			return;
 		}
