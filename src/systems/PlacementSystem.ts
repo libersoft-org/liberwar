@@ -1,6 +1,6 @@
 import { spiralSearch } from '../math/geometry.ts';
 import { tileCenter } from '../map/GameMap.ts';
-import { TILE } from '../core/types.ts';
+import { MAP_H, MAP_W, TILE } from '../core/types.ts';
 import { dist } from '../math/vec.ts';
 import { FOG_HIDDEN, FOG_VISIBLE } from '../map/FogOfWar.ts';
 import type { FogOfWar } from '../map/FogOfWar.ts';
@@ -67,7 +67,26 @@ export class PlacementSystem {
 			const ty = y0 + Math.floor(rng() * (y1 - y0));
 			if (this.canPlaceBuilding(tx, ty, 5, 5)) return { x: tx, y: ty };
 		}
-		return { x: Math.floor((x0 + x1) / 2), y: Math.floor((y0 + y1) / 2) };
+		// Random sampling failed (cramped terrain). Fall back to a deterministic
+		// whole-map scan for the valid spot closest to the rectangle's centre, so
+		// the base never lands on water/rock/another building. Runs once at match
+		// start, so the exhaustive sweep is affordable.
+		const cx = Math.floor((x0 + x1) / 2);
+		const cy = Math.floor((y0 + y1) / 2);
+		let best: Vec2 | null = null;
+		let bestD = Infinity;
+		for (let ty = 0; ty < MAP_H - 5; ty++) {
+			for (let tx = 0; tx < MAP_W - 5; tx++) {
+				const d = (tx - cx) * (tx - cx) + (ty - cy) * (ty - cy);
+				if (d >= bestD) continue;
+				if (this.canPlaceBuilding(tx, ty, 5, 5)) {
+					best = { x: tx, y: ty };
+					bestD = d;
+				}
+			}
+		}
+		// no 5×5 of clear ground anywhere: the map is unplayable either way
+		return best ?? { x: cx, y: cy };
 	}
 
 	// Finds a free w×h footprint near an existing building.
