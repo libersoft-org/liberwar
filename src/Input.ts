@@ -7,6 +7,9 @@ import type { Game } from './core/Game.ts';
 export class InputController {
 	private game: Game;
 	mouse: Vec2 = { x: 0, y: 0 };
+	// true once a real mousemove arrived; until then the placeholder {0,0}
+	// position must not drive edge scrolling (camera would creep top-left)
+	private mouseSeen = false;
 	private keys = new Set<string>();
 	selecting = false;
 	selStart: Vec2 = { x: 0, y: 0 };
@@ -120,6 +123,7 @@ export class InputController {
 	private onMove(e: MouseEvent): void {
 		const p = this.localPoint(e);
 		this.mouse = p;
+		this.mouseSeen = true;
 		if (this.selecting) this.selEnd = p;
 	}
 
@@ -174,10 +178,11 @@ export class InputController {
 		if (this.keys.has('arrowup') || this.keys.has('w')) dy -= speed;
 		if (this.keys.has('arrowdown') || this.keys.has('s')) dy += speed;
 
-		// edge scrolling (only inside the game viewport)
+		// edge scrolling (only inside the game viewport, and only once the real
+		// cursor position is known)
 		const m = this.mouse;
 		const edge = 14;
-		if (!this.inSidebar(m.x)) {
+		if (this.mouseSeen && !this.inSidebar(m.x)) {
 			if (m.x < edge) dx -= speed;
 			else if (m.x > this.game.viewW - edge) dx += speed;
 			if (m.y < edge) dy -= speed;
