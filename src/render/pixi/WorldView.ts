@@ -208,8 +208,12 @@ export class WorldView {
 			for (const part of e.particles) {
 				if (part.life <= 0) continue;
 				const a = Math.max(0, part.life / part.maxLife);
-				normal.circle(part.x, part.y, part.size).fill({ color: part.color, alpha: a }).stroke({ width: 1.5, color: '#a9781f', alpha: a });
-				normal.circle(part.x, part.y, part.size * 0.62).stroke({ width: 1, color: '#e8b94d', alpha: a });
+				// the spin tumbles the coin around its vertical axis: squash the
+				// width by cos(spin) so it flips edge-on and back while airborne
+				const sx = Math.abs(Math.cos(part.spin ?? 0));
+				const w = Math.max(part.size * sx, 1.2);
+				normal.ellipse(part.x, part.y, w, part.size).fill({ color: part.color, alpha: a }).stroke({ width: 1.5, color: '#a9781f', alpha: a });
+				normal.ellipse(part.x, part.y, w * 0.62, part.size * 0.62).stroke({ width: 1, color: '#e8b94d', alpha: a });
 			}
 		}
 	}
