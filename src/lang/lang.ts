@@ -30,7 +30,13 @@ function isLocale(value: string): value is Locale {
 
 // Resolve the active locale: stored choice -> browser language -> fallback.
 export function detectLocale(): Locale {
-	const stored = localStorage.getItem(STORAGE_KEY);
+	// localStorage can throw (Safari private mode, storage disabled by policy)
+	let stored: string | null = null;
+	try {
+		stored = localStorage.getItem(STORAGE_KEY);
+	} catch {
+		/* treat as no stored preference */
+	}
 	if (stored && isLocale(stored)) return stored;
 	const base = (navigator.language ?? '').toLowerCase().split('-')[0]!;
 	return isLocale(base) ? base : DEFAULT_LOCALE;
@@ -44,7 +50,13 @@ async function applyLocale(locale: Locale, persist: boolean): Promise<void> {
 	const mod = await loaders[locale]();
 	dict = mod.default;
 	current = locale;
-	if (persist) localStorage.setItem(STORAGE_KEY, locale);
+	if (persist) {
+		try {
+			localStorage.setItem(STORAGE_KEY, locale);
+		} catch {
+			/* the switch still works for this session, it just won't be remembered */
+		}
+	}
 }
 
 // Load the detected locale once at startup (does not persist the detection).
