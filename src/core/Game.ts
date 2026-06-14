@@ -263,13 +263,16 @@ export class Game implements World {
 	// World interface
 	spawnProjectile(spec: ProjectileSpec): void {
 		this.projectiles.push(new Projectile(spec.kind, spec.from, spec.target, spec.damage, spec.splash, spec.faction));
-		this.audio.play(spec.kind === 'rocket' ? 'rocket' : 'shoot');
+		// Only audible when the muzzle is on a tile the player can currently see,
+		// so off-screen combat in the fog stays silent (same rule as enemy builds).
+		if (this.fog.isVisibleWorld(spec.from)) this.audio.play(spec.kind === 'rocket' ? 'rocket' : 'shoot');
 	}
 
 	spawnExplosion(pos: Vec2, radius: number, big: boolean): void {
 		this.effects.push(new Effect('explosion', pos, radius, big, (): number => this.rng()));
-		this.audio.play(big ? 'explosionBig' : 'explosionSmall');
-		if (big && this.fog.isVisibleWorld(pos)) this.screenShake = Math.min(8, this.screenShake + 5);
+		const visible = this.fog.isVisibleWorld(pos);
+		if (visible) this.audio.play(big ? 'explosionBig' : 'explosionSmall');
+		if (big && visible) this.screenShake = Math.min(8, this.screenShake + 5);
 	}
 
 	spawnMuzzle(pos: Vec2): void {
