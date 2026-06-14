@@ -169,9 +169,10 @@ export class Game implements World {
 	private createStartBase(faction: Faction, spot: Vec2): void {
 		const yard = this.placeBuilding('yard', faction, spot);
 		this.placeBuilding('power', faction, { x: spot.x + 3, y: spot.y });
-		// refinery placed adjacent if room, else near
+		// refinery placed adjacent if room, else the nearest free spot; skip it only
+		// in the pathological case of no free footprint nearby (never overlap the yard)
 		const refSpot = this.placement.canPlaceBuilding(spot.x, spot.y + 3, 3, 3) ? { x: spot.x, y: spot.y + 3 } : this.placement.findFreeSpotNear(yard, 3, 3);
-		this.placeBuilding('refinery', faction, refSpot);
+		if (refSpot) this.placeBuilding('refinery', faction, refSpot);
 		// starting harvester
 		const h = this.spawnUnit('harvester', faction, this.findSpawnNear(yard));
 		h.orderHarvest(this);

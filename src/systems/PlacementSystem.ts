@@ -89,10 +89,12 @@ export class PlacementSystem {
 		return best ?? { x: cx, y: cy };
 	}
 
-	// Finds a free w×h footprint near an existing building.
-	findFreeSpotNear(b: Building, w: number, h: number): Vec2 {
-		const found = spiralSearch(b.tile.x, b.tile.y, (tx: number, ty: number): boolean => this.canPlaceBuilding(tx, ty, w, h), { maxR: 12 });
-		return found ?? { x: b.tile.x, y: b.tile.y };
+	// Finds a free w×h footprint near an existing building, or null if none is
+	// free within range. Never falls back to an occupied tile: overlapping a live
+	// building would later corrupt the shared blocked-tile map (removing one
+	// building clears tiles the other still stands on, letting units walk through it).
+	findFreeSpotNear(b: Building, w: number, h: number): Vec2 | null {
+		return spiralSearch(b.tile.x, b.tile.y, (tx: number, ty: number): boolean => this.canPlaceBuilding(tx, ty, w, h), { maxR: 12 });
 	}
 
 	// Returns a passable world position next to a building for spawning units.
