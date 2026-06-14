@@ -1,6 +1,6 @@
 import { BUILDINGS, UNITS } from './core/config.ts';
 import { tileCenter } from './map/GameMap.ts';
-import { spiralSearch } from './math/geometry.ts';
+import { nearest, spiralSearch } from './math/geometry.ts';
 import { TILE } from './core/types.ts';
 import type { BuildingTypeId, UnitTypeId, Vec2 } from './core/types.ts';
 import type { Building } from './entities/Building.ts';
@@ -165,11 +165,23 @@ export class EnemyAI {
 		this.buildSlot = null;
 	}
 
+	// Reactive defence: the nearest armed player unit that has pushed into the
+	// enemy base, or null when none is close enough. Drives retaliation; easy AI
+	// never calls this so it only ever mounts scheduled attacks.
+	private detectIntruder(): Unit | null {
+		const yard = this.game.query.firstBuilding('enemy', 'yard');
+		if (!yard) return null;
+		return nearest<Unit>(yard.pos, (u: Unit): boolean => !!u.def.weapon, 16 * TILE, [this.game.query.unitsOf('player')]);
+	}
+
 	private manageArmy(): void {
 		this.army = this.army.filter((u: Unit): boolean => !u.dead);
-		const playerYard = this.game.query.firstBuilding('player', 'yard');
+
+		// Scheduled offensive: once enough troops have massed and the cooldown is
+		// up, throw the whole army at the player base (or any remaining player
+		// entity) and forget about it.
 		if (this.attackTimer <= 0 && this.army.length >= this.p.attackSize) {
-			// launch an attack at the player base / nearest player entity
+			const playerYard = this.game.query.firstBuilding('player', 'yard');
 			let target: Vec2 | null = null;
 			if (playerYard) target = playerYard.pos;
 			else {
@@ -181,16 +193,26 @@ export class EnemyAI {
 				this.army = [];
 				this.attackTimer = 25 + this.game.rng() * 15;
 			}
-		} else {
-			// idle army gathers near the enemy yard
-			const yard = this.game.query.firstBuilding('enemy', 'yard');
-			if (yard) {
-				for (const u of this.army) {
-					if (u.order === 'idle' && u.path.length === 0) {
-						const t = tileCenter(yard.tile.x + 3 + Math.floor(this.game.rng() * 3), yard.tile.y + Math.floor(this.game.rng() * 5));
-						void TILE;
-						u.orderMove(t, this.game);
-					}
+			return;
+		}
+
+		// Reactive defence: medium/hard send the idle army to intercept an armed
+		// player unit that strays into the base. Easy never retaliates.
+		if (this.p.retaliate) {
+			const intruder = this.detectIntruder();
+			if (intruder) {
+				for (const u of this.army) if (u.order === 'idle' || u.order === 'move') u.orderAttackMove(intruder.pos, this.game);
+				return;
+			}
+		}
+
+		// Otherwise the idle army loosely gathers near the enemy yard.
+		const yard = this.game.query.firstBuilding('enemy', 'yard');
+		if (yard) {
+			for (const u of this.army) {
+				if (u.order === 'idle' && u.path.length === 0) {
+					const t = tileCenter(yard.tile.x + 3 + Math.floor(this.game.rng() * 3), yard.tile.y + Math.floor(this.game.rng() * 5));
+					u.orderMove(t, this.game);
 				}
 			}
 		}
