@@ -105,9 +105,10 @@ export class Unit extends GameObject {
 		this.setDestination(refinery.pos, world);
 	}
 
-	// Forced relocation after a building was placed on this unit's tile. Walks
-	// straight to `goal`, bypassing A* (it cannot route from a blocked start
-	// tile); a harvester resumes its harvest order once it arrives.
+	// Forced relocation after a building was placed on this unit's tile. Starts
+	// with a straight walk toward `goal`, bypassing A* (it cannot route from a
+	// blocked start tile); once clear of the footprint, moveAlongPath re-routes
+	// via A* if the straight line stalls. A harvester resumes harvesting on arrival.
 	evictTo(goal: Vec2): void {
 		const resumeHarvest = this.isHarvester && this.order === 'harvest';
 		this.stop();
@@ -128,8 +129,11 @@ export class Unit extends GameObject {
 		this.resumeHarvestOnArrival = false;
 	}
 
-	private setDestination(goal: Vec2, world: World): void {
-		this.resumeHarvestOnArrival = false;
+	// Routes toward `goal` via A*. `keepResume` preserves a pending harvest resume
+	// (set by evictTo) across an internal re-route; a fresh external order clears
+	// it so the harvester doesn't unexpectedly start mining after a manual move.
+	private setDestination(goal: Vec2, world: World, keepResume: boolean = false): void {
+		if (!keepResume) this.resumeHarvestOnArrival = false;
 		this.moveGoal = { ...goal };
 		const start = worldToTile(this.pos);
 		const end = worldToTile(goal);
@@ -403,7 +407,16 @@ export class Unit extends GameObject {
 				this.repathTimer = 0;
 			}
 		}
+		const moved = Math.abs(nx - this.pos.x) + Math.abs(ny - this.pos.y);
 		this.pos.x = nx;
 		this.pos.y = ny;
+
+		// A plain move never repaths on its own, and an evictTo walk-out follows a
+		// straight line (no A* route), so terrain it cannot sidestep would pin the
+		// unit in place forever — and a harvester would never resume. Once such a
+		// move stalls on open ground, re-route it with A* (keeping any pending
+		// harvest resume); an unreachable goal returns an empty path and the move
+		// retires on the next frame via the path-exhausted branch above.
+		if (this.order === 'move' && moved < 0.01 && !onBlocked && this.moveGoal && this.repathTimer <= 0) this.setDestination(this.moveGoal, world, true);
 	}
 }
