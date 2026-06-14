@@ -159,6 +159,11 @@ export class Game implements World {
 		const playerSpot = this.placement.findBaseSpot(8, 8, 22, 22, (): number => this.rng());
 		const enemySpot = this.placement.findBaseSpot(MAP_W - 22, MAP_H - 22, MAP_W - 8, MAP_H - 8, (): number => this.rng());
 
+		// The terrain generator can split the map into islands; guarantee the two
+		// bases can reach each other (centres of the 5×5 spots) so the match is
+		// always winnable.
+		this.map.ensureConnected({ x: playerSpot.x + 2, y: playerSpot.y + 2 }, { x: enemySpot.x + 2, y: enemySpot.y + 2 });
+
 		this.createStartBase('player', playerSpot);
 		this.createStartBase('enemy', enemySpot);
 

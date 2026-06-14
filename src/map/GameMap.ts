@@ -162,6 +162,71 @@ export class GameMap {
 		this.blocked[this.idx(tx, ty)] = v ? 1 : 0;
 	}
 
+	// Guarantees a walkable route between two tiles, carving an L-shaped corridor
+	// through any water/rock that isolates them. The value-noise generator can
+	// split the map into islands; without this the two starting bases could be
+	// mutually unreachable and the match unwinnable. Runs once at match setup.
+	ensureConnected(a: Vec2, b: Vec2): void {
+		if (this.terrainConnected(a, b)) return;
+		const carveWide = (tx: number, ty: number): void => {
+			this.clearToLand(tx, ty);
+			this.clearToLand(tx + 1, ty);
+			this.clearToLand(tx, ty + 1);
+		};
+		let x = a.x;
+		let y = a.y;
+		carveWide(x, y);
+		while (x !== b.x) {
+			x += x < b.x ? 1 : -1;
+			carveWide(x, y);
+		}
+		while (y !== b.y) {
+			y += y < b.y ? 1 : -1;
+			carveWide(x, y);
+		}
+	}
+
+	// Flood-fills passable terrain from `a` and reports whether `b` is reachable.
+	// Uses terrain-only passability (water/rock are the permanent barriers);
+	// buildings are transient and must not count toward winnability.
+	private terrainConnected(a: Vec2, b: Vec2): boolean {
+		if (!this.passableTerrain(a.x, a.y) || !this.passableTerrain(b.x, b.y)) return false;
+		const goal = this.idx(b.x, b.y);
+		const seen = new Uint8Array(MAP_W * MAP_H);
+		const stack: number[] = [this.idx(a.x, a.y)];
+		seen[stack[0]!] = 1;
+		const dirs: ReadonlyArray<readonly [number, number]> = [
+			[1, 0],
+			[-1, 0],
+			[0, 1],
+			[0, -1],
+		];
+		while (stack.length > 0) {
+			const cur = stack.pop()!;
+			if (cur === goal) return true;
+			const cx = cur % MAP_W;
+			const cy = (cur / MAP_W) | 0;
+			for (const [dx, dy] of dirs) {
+				const nx = cx + dx;
+				const ny = cy + dy;
+				if (!this.passableTerrain(nx, ny)) continue;
+				const ni = this.idx(nx, ny);
+				if (seen[ni]) continue;
+				seen[ni] = 1;
+				stack.push(ni);
+			}
+		}
+		return false;
+	}
+
+	// Turns an impassable (water/rock) tile into walkable dirt; leaves land tiles
+	// and their harvest untouched (harvest only ever sits on land).
+	private clearToLand(tx: number, ty: number): void {
+		if (!this.inBounds(tx, ty)) return;
+		const t = this.terrain[ty]![tx]!;
+		if (t === 'water' || t === 'rock') this.terrain[ty]![tx] = 'dirt';
+	}
+
 	// Harvest under a building footprint is inaccessible (and reads as 0) until
 	// the building is removed; the stored value stays frozen meanwhile.
 	harvestAt(tx: number, ty: number): number {
