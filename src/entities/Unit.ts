@@ -192,8 +192,16 @@ export class Unit extends GameObject {
 				this.facing = this.turret;
 				if (this.cooldown <= 0) this.fire(t, world);
 			} else if (this.order === 'attack' || this.order === 'attackMove') {
-				// chase
-				if (this.repathTimer <= 0 || this.path.length === 0) this.setDestination(t.pos, world);
+				// chase, throttled to repathTimer. The old `|| this.path.length === 0`
+				// re-ran a full A* every frame at an unreachable target: findPath
+				// returns [] once the unit sits on the closest reachable tile, so an
+				// empty path kept that operand true forever.
+				if (this.repathTimer <= 0) {
+					this.setDestination(t.pos, world);
+					// unreachable (empty path): give up like attackMove does on an
+					// unreachable goal, instead of inching at the shore indefinitely.
+					if (this.path.length === 0 && this.order === 'attack') this.stop();
+				}
 			}
 			void dt;
 		} else if (this.order === 'attackMove' && this.attackMoveGoal) {
