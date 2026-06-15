@@ -20,6 +20,10 @@ const PARAMS: Record<Difficulty, DiffParams> = {
 };
 // Build/training priority order for the enemy.
 const BUILD_PLAN: BuildingTypeId[] = ['power', 'refinery', 'barracks', 'factory', 'power', 'turret', 'barracks', 'turret', 'power'];
+// Core economy/production structures the AI keeps standing once the opening
+// plan is done; any of these lost to a raid is rebuilt (power first, so build
+// speed and the factory/turret prerequisite recover before the rest).
+const REBUILD_ESSENTIALS: BuildingTypeId[] = ['power', 'refinery', 'barracks', 'factory'];
 
 export class EnemyAI {
 	private game: Game;
@@ -72,6 +76,12 @@ export class EnemyAI {
 		return this.game.query.hasBuilding('enemy', type);
 	}
 
+	// First essential structure the AI is currently missing, or null if all stand.
+	private missingEssential(): BuildingTypeId | null {
+		for (const type of REBUILD_ESSENTIALS) if (!this.has(type)) return type;
+		return null;
+	}
+
 	private think(): void {
 		const credits = this.game.creditsFor('enemy');
 		const buildings = this.myBuildings();
@@ -95,6 +105,22 @@ export class EnemyAI {
 				this.buildSlot = { type: next, timeLeft: def.buildTime };
 				this.planIndex++;
 				return;
+			}
+		}
+
+		// Once the opening plan is complete, keep essential structures standing.
+		// planIndex only ever advances, so without this a single successful raid that
+		// flattens the refinery/factory/barracks would permanently cripple the AI: it
+		// would coast on passive income alone and never rebuild what it lost.
+		if (this.planIndex >= BUILD_PLAN.length && !this.buildSlot) {
+			const missing = this.missingEssential();
+			if (missing) {
+				const def = BUILDINGS[missing];
+				const reqMet = !def.requires || def.requires.every((r: BuildingTypeId): boolean => this.has(r));
+				if (reqMet && credits >= def.cost && this.game.spend('enemy', def.cost)) {
+					this.buildSlot = { type: missing, timeLeft: def.buildTime };
+					return;
+				}
 			}
 		}
 
