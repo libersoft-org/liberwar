@@ -237,8 +237,17 @@ export class Unit extends GameObject {
 					if (found) {
 						this.harvestTile = found;
 						this.setDestination(tileCenter(found.x, found.y), world);
+					} else if (this.harvestLoad > 0) {
+						// No reachable ore left, but the load isn't empty: deliver the
+						// partial load instead of sitting on it (otherwise these credits
+						// stay stranded until the player manually orders an unload).
+						this.harvestTile = null;
+						this.harvestState = 'returning';
+						this.homeRefinery = this.findRefinery(world);
+						if (this.homeRefinery) this.setDestination(this.homeRefinery.pos, world);
+						return;
 					} else {
-						// nothing worth harvesting; idle and retry in a while
+						// nothing to harvest and nothing to deliver; idle and retry in a while
 						this.harvestTile = null;
 						this.harvestSearchTimer = 2;
 						this.path = [];
