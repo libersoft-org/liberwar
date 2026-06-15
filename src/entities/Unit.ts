@@ -34,6 +34,11 @@ export class Unit extends GameObject {
 	// original attack-move destination; moveGoal gets overwritten while chasing targets
 	attackMoveGoal: Vec2 | null = null;
 	attackTarget: Entity | null = null;
+	// Anchor for an auto-acquired (idle-guard) attack: the spot the unit was holding
+	// when it spotted an enemy on its own. If a chased target lures it past the leash
+	// from here, it abandons the chase and walks back. Null for player-ordered
+	// attacks, which chase without limit.
+	guardPos: Vec2 | null = null;
 	cooldown = 0;
 	repathTimer = 0;
 	// Set while walking out from under a freshly placed building; a harvester
@@ -66,6 +71,7 @@ export class Unit extends GameObject {
 		this.order = 'move';
 		this.attackTarget = null;
 		this.attackMoveGoal = null;
+		this.guardPos = null;
 		this.setDestination(goal, world);
 	}
 
@@ -73,6 +79,7 @@ export class Unit extends GameObject {
 		this.order = 'attackMove';
 		this.attackTarget = null;
 		this.attackMoveGoal = { ...goal };
+		this.guardPos = null;
 		this.setDestination(goal, world);
 	}
 
@@ -83,6 +90,7 @@ export class Unit extends GameObject {
 		}
 		this.order = 'attack';
 		this.attackTarget = target;
+		this.guardPos = null;
 	}
 
 	orderHarvest(world: World, tile?: Vec2): void {
@@ -125,6 +133,7 @@ export class Unit extends GameObject {
 		this.pathTarget = null;
 		this.moveGoal = null;
 		this.attackMoveGoal = null;
+		this.guardPos = null;
 		this.vel = { x: 0, y: 0 };
 		this.resumeHarvestOnArrival = false;
 	}
@@ -173,13 +182,28 @@ export class Unit extends GameObject {
 				const enemy = world.findNearestEnemy(this.faction, this.pos, this.def.sight);
 				if (enemy) {
 					this.attackTarget = enemy;
-					if (this.order === 'idle') this.order = 'attack';
+					if (this.order === 'idle') {
+						this.order = 'attack';
+						// remember where we started guarding so we can leash back to it
+						this.guardPos = { ...this.pos };
+					}
 				}
 			}
 		}
 
 		if (this.attackTarget && !this.attackTarget.dead) {
 			const t = this.attackTarget;
+			// Leashed guard: an auto-acquired target that lures us past the leash from
+			// the guard anchor is abandoned and the unit walks back, instead of being
+			// dragged across the map. The leash (1.6x sight) stays above weapon range,
+			// so a freshly acquired or in-range target is never dropped mid-fight.
+			// guardPos is null for player-ordered attacks, which chase without limit.
+			if (this.guardPos && dist(this.guardPos, t.pos) > this.def.sight * TILE * 1.6) {
+				const home = this.guardPos;
+				this.attackTarget = null;
+				this.orderMove(home, world);
+				return;
+			}
 			const d = dist(t.pos, this.pos);
 			const rangePx = (this.def.weapon?.range ?? 0) * TILE + t.radius;
 			this.turret = angleTo(this.pos, t.pos);
