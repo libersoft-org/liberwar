@@ -142,6 +142,10 @@ export class Effect {
 	update(dt: number): void {
 		this.age += dt;
 		const isSell = this.kind === 'sell';
+		// Frame-rate-independent drag: the 0.9 per-frame factor was tuned at 60 FPS,
+		// so raise it to dt*60 to damp by the same amount per unit time regardless
+		// of refresh rate (otherwise explosions decay faster at 144 Hz than 30 Hz).
+		const drag = Math.pow(0.9, dt * 60);
 		for (const p of this.particles) {
 			p.life -= dt;
 			p.x += p.vx * dt;
@@ -150,8 +154,8 @@ export class Effect {
 				p.vy += 320 * dt; // gravity pulls coins back down
 				if (p.spin !== undefined && p.spinSpeed !== undefined) p.spin += p.spinSpeed * dt;
 			} else {
-				p.vx *= 0.9;
-				p.vy *= 0.9;
+				p.vx *= drag;
+				p.vy *= drag;
 			}
 		}
 		if (this.age >= this.duration) this.dead = true;
