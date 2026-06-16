@@ -293,6 +293,10 @@ export class Game implements World {
 		return this.combat.findNearestEnemy(faction, pos, rangeTiles);
 	}
 
+	findEnemyInWeaponRange(faction: Faction, pos: Vec2, rangeTiles: number): Entity | null {
+		return this.combat.findEnemyInWeaponRange(faction, pos, rangeTiles);
+	}
+
 	// selection / commands facade
 	selectInBox(a: Vec2, b: Vec2, additive: boolean): void {
 		this.selection.selectInBox(a, b, additive);

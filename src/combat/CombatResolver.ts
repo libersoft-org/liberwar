@@ -21,6 +21,29 @@ export class CombatResolver {
 		return nearest<Entity>(pos, (e: Entity): boolean => !e.dead && e.faction !== faction, rangeTiles * TILE, [this.units(), this.buildings()]);
 	}
 
+	// Nearest enemy whose body — not just its centre — is within weapon range of
+	// `pos`. Mirrors the unit firing check (range measured to the target's edge,
+	// i.e. + radius) so an armed structure reaches large targets (big buildings,
+	// tanks) exactly as far as a unit with the same weapon range; comparing
+	// centre-to-centre alone under-reaches by the target's radius.
+	findEnemyInWeaponRange(faction: Faction, pos: Vec2, rangeTiles: number): Entity | null {
+		const rangePx = rangeTiles * TILE;
+		let best: Entity | null = null;
+		let bestD = Infinity;
+		for (const group of [this.units(), this.buildings()]) {
+			for (const e of group) {
+				if (e.dead || e.faction === faction) continue;
+				const d = dist(e.pos, pos);
+				if (d > rangePx + e.radius) continue;
+				if (d < bestD) {
+					bestD = d;
+					best = e;
+				}
+			}
+		}
+		return best;
+	}
+
 	// Applies splash damage to all enemies of `faction` within `radius` px.
 	damageArea(pos: Vec2, radius: number, damage: number, faction: Faction): void {
 		const targets: (Unit | Building)[] = [...this.units(), ...this.buildings()];

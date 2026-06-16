@@ -38,6 +38,7 @@ export interface World {
 	// Applies damage at a point to all enemies of `faction` within `radius` px.
 	damageArea(pos: Vec2, radius: number, damage: number, faction: Faction): void;
 	findNearestEnemy(faction: Faction, pos: Vec2, rangeTiles: number): Entity | null;
+	findEnemyInWeaponRange(faction: Faction, pos: Vec2, rangeTiles: number): Entity | null;
 	creditsFor(faction: Faction): number;
 	addCredits(faction: Faction, amount: number): void;
 }

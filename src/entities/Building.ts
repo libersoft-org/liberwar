@@ -42,7 +42,7 @@ export class Building extends GameObject {
 		// Armed structures (e.g. turret) auto-fire at the nearest enemy.
 		const weapon = this.def.weapon;
 		if (weapon) {
-			const enemy = world.findNearestEnemy(this.faction, this.pos, weapon.range);
+			const enemy = world.findEnemyInWeaponRange(this.faction, this.pos, weapon.range);
 			if (enemy) {
 				this.turretAngle = angleTo(this.pos, enemy.pos);
 				if (this.cooldown <= 0) {
