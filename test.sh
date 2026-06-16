@@ -1,4 +1,4 @@
 #!/bin/sh
 
 bun tsc --noEmit
-bunx knip
+bun knip
