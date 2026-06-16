@@ -14,7 +14,7 @@
  * (logical pixels) and apply {@link viewport}`.scale` only when converting to or
  * from physical/window pixels (e.g. mouse input).
  */
-export const REFERENCE_HEIGHT = 1080;
+const REFERENCE_HEIGHT = 1080;
 
 export const viewport = {
 	/** Logical width (window width expressed in reference pixels). */

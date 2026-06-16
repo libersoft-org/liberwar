@@ -15,5 +15,10 @@
 	},
 	"dependencies": {
 		"pixi.js": "^8.19.0"
+	},
+	"knip": {
+		"ignoreDependencies": [
+			"prettier"
+		]
 	}
 }

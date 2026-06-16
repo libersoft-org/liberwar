@@ -22,7 +22,6 @@ export type BuildingTypeId =
 	| 'barracks' // Infantry
 	| 'factory' // War Factory (vehicles)
 	| 'turret'; // Defensive turret
-export type EntityKind = 'unit' | 'building';
 /**
  * Why an entity left the world. Drives the removal side-effects (visual
  * effect, sound, freeing of tiles) and lets stats count only what matters

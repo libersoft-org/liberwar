@@ -29,7 +29,7 @@ function isLocale(value: string): value is Locale {
 }
 
 // Resolve the active locale: stored choice -> browser language -> fallback.
-export function detectLocale(): Locale {
+function detectLocale(): Locale {
 	// localStorage can throw (Safari private mode, storage disabled by policy)
 	let stored: string | null = null;
 	try {
