@@ -42,7 +42,11 @@ export abstract class GameObject implements Entity {
 	}
 
 	takeDamage(dmg: number): void {
-		this.hp -= Math.round(dmg);
+		if (dmg <= 0) return;
+		// Any positive hit removes at least 1 hp. Rounding alone dropped splash
+		// damage below 0.5 (edge of a blast after falloff) to zero, so distant
+		// targets soaked explosions for free.
+		this.hp -= Math.max(1, Math.round(dmg));
 		if (this.hp <= 0) {
 			this.hp = 0;
 			this.remove('destroyed');
