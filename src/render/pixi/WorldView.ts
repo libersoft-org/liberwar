@@ -195,6 +195,10 @@ export class WorldView {
 		const add = this.fxAdd.clear();
 		for (const e of g.effects) {
 			if (e.kind === 'sell') continue;
+			// Hide explosions/muzzle flashes outside the player's current sight, the
+			// same as projectiles: drawing them over explored-but-dark tiles leaked
+			// enemy activity (combat, building loss) the player shouldn't see.
+			if (!g.fog.isVisibleWorld(e.pos)) continue;
 			for (const part of e.particles) {
 				if (part.life <= 0) continue;
 				const a = Math.max(0, part.life / part.maxLife);
