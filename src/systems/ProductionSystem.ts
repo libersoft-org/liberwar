@@ -164,11 +164,16 @@ export class ProductionSystem {
 
 	private completeUnit(type: UnitTypeId): void {
 		const def = UNITS[type];
-		const from = this.host.buildings.find((b: Building): boolean => b.faction === 'player' && b.typeId === def.from && !b.dead);
-		if (!from) {
+		const candidates = this.host.buildings.filter((b: Building): boolean => b.faction === 'player' && b.typeId === def.from && !b.dead);
+		if (candidates.length === 0) {
 			this.host.economy.addCredits('player', def.cost); // refund if building lost
 			return;
 		}
+		// The unit queue is shared across every building of a type, so a plain
+		// `find` always picked the first one and ignored a rally set on any other.
+		// Prefer a building that has a rally as the exit point — that's the one the
+		// player aimed it at — and fall back to the first when none has a rally.
+		const from = candidates.find((b: Building): boolean => b.rally !== null) ?? candidates[0]!;
 		const u = this.host.spawnUnit(type, 'player', this.host.findSpawnNear(from));
 		this.host.audio.play('complete');
 		if (u.isHarvester) u.orderHarvest(this.host);
