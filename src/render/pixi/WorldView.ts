@@ -324,8 +324,10 @@ export class WorldView {
 
 		const input = g.input;
 		if (input.selecting) {
-			const a = input.selStart;
-			const b = input.selEnd;
+			// selStart/selEnd live in world space; project them back to the screen
+			// each frame so the box tracks the world region as the camera scrolls.
+			const a = g.camera.worldToScreen(input.selStart);
+			const b = g.camera.worldToScreen(input.selEnd);
 			const x = Math.min(a.x, b.x);
 			const y = Math.min(a.y, b.y);
 			const w = Math.abs(a.x - b.x);

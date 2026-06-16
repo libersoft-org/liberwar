@@ -103,8 +103,11 @@ export class InputController {
 				return;
 			}
 			this.selecting = true;
-			this.selStart = { x, y };
-			this.selEnd = { x, y };
+			// Anchor the box in world space so it stays put when the camera edge-scrolls
+			// mid-drag: it then spans from the original world point to wherever the
+			// cursor reaches, even past the screen edge where the drag began.
+			this.selStart = this.screenToWorld({ x, y });
+			this.selEnd = { ...this.selStart };
 		} else if (e.button === 2) {
 			if (this.game.pendingPlacement) {
 				this.game.pendingPlacement = null;
@@ -124,9 +127,8 @@ export class InputController {
 		}
 		if (e.button === 0 && this.selecting) {
 			this.selecting = false;
-			const a = this.screenToWorld(this.selStart);
-			const b = this.screenToWorld(this.localPoint(e));
-			this.game.selectInBox(a, b, e.shiftKey);
+			// selStart is already world-space; the release point is the freshest end.
+			this.game.selectInBox(this.selStart, this.screenToWorld(this.localPoint(e)), e.shiftKey);
 		}
 	}
 
@@ -134,7 +136,7 @@ export class InputController {
 		const p = this.localPoint(e);
 		this.mouse = p;
 		this.mouseSeen = true;
-		if (this.selecting) this.selEnd = p;
+		if (this.selecting) this.selEnd = this.screenToWorld(p);
 	}
 
 	private onWheel(e: WheelEvent): void {
@@ -201,6 +203,9 @@ export class InputController {
 			else if (m.y > this.game.viewH - edge) dy += speed;
 		}
 		if (dx !== 0 || dy !== 0) cam.move(dx, dy);
+		// Re-anchor the drag-box end under the cursor after any scroll; the mouse can
+		// sit motionless at the edge, so onMove alone would leave selEnd stale.
+		if (this.selecting) this.selEnd = this.screenToWorld(this.mouse);
 		void TILE;
 	}
 
